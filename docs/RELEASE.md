@@ -8,6 +8,8 @@ License storage uses an installation-specific 32-byte key protected by Electron 
 
 The development fixture is limited to explicitly requested unpackaged test runs in disposable temporary data. Packaged GUI launches ignore STUDIO_TEST_LICENSE, and the packaged agent rejects --test-license. Tests with generated signing keys use separate temporary storage; they do not activate or consume real customer licenses.
 
+The packaged MCP harness runs the bundled bridge executable and bundled services with an isolated host-Node test agent. Explicit command probes use that agent's actual Node runtime. It validates packaged resources and native isolation; it does not certify paid activation in a production GUI. The separate packaged license test exercises real production encrypted storage and unpaid-write rejection.
+
 Run typecheck, lint, the Vitest suite and the source Electron suite before a candidate. Build a native package and run tests/e2e/license.spec.ts plus scripts/smoke-desktop.mjs --recovery against it. The packaged negative test must initialize real encrypted SDK storage and reject protected writes without activation even when STUDIO_TEST_LICENSE is present.
 
 Source lives in `Soravit-Ice/remote-studio`; public installers live in `Soravit-Ice/remote-studio-releases`. The downloads repository has immutable releases enabled. See [the Thai setup guide](RELEASE_TO_STORE_TH.md) for the exact repository IDs, credentials, Store bindings and tag instructions.

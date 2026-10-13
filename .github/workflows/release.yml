@@ -15,6 +15,7 @@ jobs:
     uses: Soravit-Ice/remote-studio/.github/workflows/store-release.yml@main
     with:
       signed: ${{ vars.REMOTE_STUDIO_SIGNED_RELEASE == 'true' }}
+      targets: ${{ vars.REMOTE_STUDIO_RELEASE_TARGETS || '[{"runner":"macos-latest","platform":"darwin","arch":"arm64"},{"runner":"macos-15-intel","platform":"darwin","arch":"x64"},{"runner":"windows-2025","platform":"win32","arch":"x64"}]' }}
     secrets:
       DOWNLOADS_APP_PRIVATE_KEY: ${{ secrets.DOWNLOADS_APP_PRIVATE_KEY }}
       DOWNLOADS_RELEASE_TOKEN: ${{ secrets.DOWNLOADS_RELEASE_TOKEN }}

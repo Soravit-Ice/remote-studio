@@ -35,7 +35,7 @@ jobs:
       - run: pnpm exec electron-builder --dir -c.mac.identity=null -c.mac.notarize=false
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-      - name: Packaged native MCP and Electron verification
+      - name: Packaged MCP services and production Electron enforcement
         shell: pwsh
         run: |
           if ($IsWindows) {

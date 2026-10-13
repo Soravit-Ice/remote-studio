@@ -23,13 +23,14 @@ it("native Full Access develops and inspects a real website through MCP, without
     outside = join(root, "outside.txt");
   await mkdir(workspace);
   await writeFile(outside, "private sibling");
-  const executable = process.env.STUDIO_NATIVE_NODE ?? process.execPath;
+  const bridgeExecutable = process.env.STUDIO_NATIVE_NODE ?? process.execPath;
   const services = resolve(
     process.env.STUDIO_NATIVE_SERVICES ?? "dist/services",
   );
   const runtimeEnv = { ...process.env, ELECTRON_RUN_AS_NODE: "1" };
-  // The test authority belongs to a host-Node agent; scoped workers still use
-  // STUDIO_NATIVE_NODE/STUDIO_NATIVE_SERVICES when checking packaged runtimes.
+  // Explicit test authority runs in a host-Node agent with the selected bundled
+  // services. The packaged executable runs the bridge; command tests use that
+  // agent's actual Node runtime. Production GUI enforcement is tested separately.
   const agent = spawn(
     process.execPath,
     [join(services, "agent.mjs"), "--test-license", "--data", directory],
@@ -118,7 +119,7 @@ it("native Full Access develops and inspects a real website through MCP, without
       const c = new Client({ name: "native-workflow", version: "1" });
       await c.connect(
         new StdioClientTransport({
-          command: executable,
+          command: bridgeExecutable,
           args: [
             join(services, "bridge.mjs"),
             "--credential",
@@ -233,7 +234,7 @@ it("native Full Access develops and inspects a real website through MCP, without
     const isolateCode = `const fs=require('fs');for(const p of [${JSON.stringify(outside)},${JSON.stringify(join(directory, "studio.sqlite"))}]){try{fs.readFileSync(p);process.exit(9)}catch(e){console.log('denied-read',e.code)}try{fs.writeFileSync(p,'bad');process.exit(9)}catch(e){console.log('denied-write',e.code)}}if(process.env.CONTROL_PLANE_API_KEY)process.exit(9);console.log('isolated')`;
     const isolated = await done(
       await call("command_execute", {
-        executable,
+        executable: process.execPath,
         args: ["-e", isolateCode],
       }),
     );
@@ -258,7 +259,7 @@ it("native Full Access develops and inspects a real website through MCP, without
     expect(denied.isError).toBe(true);
     await done(
       await call("command_execute", {
-        executable,
+        executable: process.execPath,
         args: [
           "-e",
           "try{require('fs').readFileSync('escape/outside.txt');process.exit(9)}catch(e){console.log('symlink-denied')}",
@@ -267,7 +268,7 @@ it("native Full Access develops and inspects a real website through MCP, without
     );
     expect(await readFile(outside, "utf8")).toBe("private sibling");
     const stdin = await call("command_execute", {
-      executable,
+      executable: process.execPath,
       args: [
         "-e",
         "process.stdin.on('data',b=>{console.log(b.toString());process.exit(0)})",

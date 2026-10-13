@@ -2,6 +2,9 @@ name: Remote Studio verified installer submission
 on:
   workflow_call:
     inputs:
+      targets:
+        type: string
+        required: true
       signed:
         type: boolean
         default: false
@@ -45,17 +48,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: macos-latest
-            platform: darwin
-            arch: arm64
-          - os: macos-15-intel
-            platform: darwin
-            arch: x64
-          - os: windows-2025
-            platform: win32
-            arch: x64
-    runs-on: ${{ matrix.os }}
+        include: ${{ fromJSON(inputs.targets) }}
+    runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     environment: release-signing-${{ matrix.platform }}
     steps:
@@ -97,6 +91,16 @@ jobs:
           } else {
             $env:STUDIO_ELECTRON_EXE = (Resolve-Path 'release/mac/Remote Studio.app/Contents/MacOS/Remote Studio').Path
           }
+          $env:STUDIO_NATIVE_NODE = $env:STUDIO_ELECTRON_EXE
+          if ($IsWindows) {
+            $env:STUDIO_NATIVE_SERVICES = (Resolve-Path 'release/win-unpacked/resources/services').Path
+          } elseif ('${{ matrix.arch }}' -eq 'arm64') {
+            $env:STUDIO_NATIVE_SERVICES = (Resolve-Path 'release/mac-arm64/Remote Studio.app/Contents/Resources/services').Path
+          } else {
+            $env:STUDIO_NATIVE_SERVICES = (Resolve-Path 'release/mac/Remote Studio.app/Contents/Resources/services').Path
+          }
+          pnpm exec vitest run tests/integration/native-workflow.test.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           pnpm exec playwright test tests/e2e/license.spec.ts
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           node scripts/smoke-desktop.mjs --executable "$env:STUDIO_ELECTRON_EXE" --recovery
@@ -137,7 +141,7 @@ jobs:
           path: release
       - run: node scripts/merge-release-manifests.mjs
         env:
-          REMOTE_STUDIO_RELEASE_TARGETS: '[{"platform":"darwin","arch":"arm64"},{"platform":"darwin","arch":"x64"},{"platform":"win32","arch":"x64"}]'
+          REMOTE_STUDIO_RELEASE_TARGETS: ${{ inputs.targets }}
       - name: Create scoped download repository token
         if: ${{ vars.DOWNLOADS_APP_ID != '' }}
         id: downloads-token
