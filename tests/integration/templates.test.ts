@@ -64,7 +64,8 @@ it("builds and sees actual Astro/Next/full-stack/Electron templates under native
       });
       expect(created.status).toBe("applied");
       await finish(await call("project_install", { path }));
-      if (["astro", "electron", "react-vite", "tauri"].includes(template)) {
+      // These Vite 7 presets use Rollup. Astro's own bundler need not install it.
+      if (["electron", "react-vite", "tauri"].includes(template)) {
         const rollup = JSON.parse(
           await readFile(
             join(ws.path, path, "node_modules/rollup/package.json"),
