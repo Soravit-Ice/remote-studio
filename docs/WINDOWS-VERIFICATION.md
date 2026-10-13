@@ -1,6 +1,6 @@
 # Windows build and verification handoff
 
-Windows implementation is present but has **not been executed or certified on Windows in this Mac session**. Do not label Windows support verified until all native checks below pass. No Docker is required.
+Windows implementation was compiled and exercised on GitHub native CI run [38379004480](https://github.com/Soravit-Ice/remote-studio/actions/runs/38379004480), source 75047cc. SDK signature verification, source checks, typecheck/lint/build and the actual native launch-gate test passed. Full native integration failed with `Sandbox ACL failed ... (5)` when granting runtime access. Windows is **not certified for release** until native runtime ACL setup and all checks below pass. No Docker is required.
 
 ## Prerequisites
 
@@ -43,4 +43,4 @@ Also run the native MCP workflow with the packaged runtime (a bundled helper and
 
 Run the installed NSIS application on a clean machine and repeat the tests before distributing it. Preserve `test-results`, failed-test traces, native helper errors and version information. Never include runtime API keys, local MCP credentials, the app database, or a personal workspace in the test report.
 
-The existing `.github/workflows/native-ci.yml` includes macOS and Windows builds/tests plus packaged native MCP/Electron verification; it has not run against a remote repository in this session. Before release run the packaged native workflow and clean-installer checks on both hosts.
+The existing `.github/workflows/native-ci.yml` includes macOS and Windows builds/tests plus packaged native MCP/Electron verification. Native failure keeps Windows packaging and publication gated. Before release run the packaged native workflow and clean-installer checks on both hosts. Do not remove LPAC, opt out of native isolation, or take ownership of Windows system directories to make tests pass.

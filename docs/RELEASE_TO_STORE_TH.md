@@ -79,7 +79,7 @@ SDK archive ติดตั้งและตรวจ signature แล้ว �
 ทำขั้นตอน credential และ Store bindings ให้ครบก่อนสร้าง tag:
 
 1. แก้ version ใน `package.json` และเพิ่ม `releases/VERSION.md` ให้ตรงกัน เช่น `0.1.0`
-2. Commit/push source และรอ **Native verification** ผ่าน ตรวจ actual account login → activate RS → protected work → restart กับ candidate ด้วย
+2. Commit/push source และรอ **Native verification** ของระบบที่เลือกปล่อยผ่าน ตรวจ actual account login → activate RS → protected work → restart กับ candidate ด้วย Windows ที่ยังไม่ผ่านต้องไม่รวมใน release targets
 3. สร้าง/push tag จาก commit นั้น:
 
 ```sh
@@ -103,6 +103,19 @@ Unsigned ใช้งาน flow นี้ได้และ manifest ระบ�
 - Environment `release-signing-win32`: `CSC_LINK`, `CSC_KEY_PASSWORD` ของ Windows certificate
 
 source/config/workflow/repo delivery เตรียมแล้ว แต่ยังไม่มี download write credential ใน source, ยังต้องบันทึก Store SDK/repository bindings และยืนยัน real customer activation/native acceptance ก่อน commercial release ไม่มี tag `v0.1.0` หรือ commercial publication ถูกสร้างจากงานเตรียมนี้
+
+Windows CI ยืนยัน native launch gate แล้ว แต่ native sandbox ยังติด `Sandbox ACL failed ... (5)` ตอนเตรียมสิทธิ์ runtime ต้องแก้ native Windows setup/ACL และให้ acceptance ผ่านก่อนปล่อยครบสาม target Workflow จะหยุดเมื่อ Windows ไม่ผ่าน ไม่มีการข้าม sandbox หรืออ้างว่า Mac tests รับรอง Windows
+
+เลือก target ได้แบบ Precut ผ่าน Variable `REMOTE_STUDIO_RELEASE_TARGETS` ใน source repo ค่าเริ่มต้นมี Mac ARM64, Mac Intel และ Windows X64 หากเลือกปล่อยเฉพาะ Mac ให้ตั้ง JSON ด้านล่างก่อนสร้าง tag; build/test/package gates ของทั้งสอง Mac ยังต้องผ่าน ส่วน Windows ไม่ได้ถูกรวมเป็น artifact ของ release นั้น:
+
+```json
+[
+  { "runner": "macos-latest", "platform": "darwin", "arch": "arm64" },
+  { "runner": "macos-15-intel", "platform": "darwin", "arch": "x64" }
+]
+```
+
+เพิ่ม `{ "runner": "windows-2025", "platform": "win32", "arch": "x64" }` กลับเมื่อ Windows acceptance ผ่านแล้ว ไม่ต้องแก้ source workflow ทุกครั้งที่เลือก target และ manifest จะรวมเฉพาะไฟล์ที่ตรวจในรอบนั้น
 
 ## Error Rollup ใน CI
 

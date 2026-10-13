@@ -113,6 +113,11 @@ Personal project acceptance comes before commercial certification. No GitHub pus
 - [x] Matching tag/package/version-note validation, native build/test/package gates and separate GitHub installer delivery.
 - [x] Hash-checked immutable assets, signed/notarized metadata from actual verified builds and Store OIDC verification submission.
 - [x] Generic uploader/ref/manifest regressions: 22 tests; typecheck/lint/SDK/public/config checks.
-- [ ] Final template regression and updated Mac/Windows CI confirmation.
+- [x] Final local template regression, 93 core tests and 7 source UI workflows.
+- [x] Windows actual-helper launch-gate confirmation on CI 38379004480.
+- [x] Current unsigned Mac arm64 packaged enforcement, startup, renderer/agent recovery smoke and screenshot inspection.
+- [x] Corrected packaged MCP service harness; complete local packaged-resource workflow passed with owning host runtime and actual packaged bridge.
+- [x] Configurable verified release targets with default Mac ARM64/Intel and Windows X64; documented Mac-only selection.
+- [ ] Final updated Mac native CI outcome; Windows runtime ACL setup (native permission error 5) and full native acceptance before all-target release.
 - [ ] Install GitHub App on download repo and set DOWNLOADS_APP_ID / DOWNLOADS_APP_PRIVATE_KEY, or set scoped DOWNLOADS_RELEASE_TOKEN.
 - [ ] Store RS SDK Integration, numeric source/download repository bindings and real paid activation acceptance.
