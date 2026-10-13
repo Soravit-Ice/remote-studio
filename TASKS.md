@@ -106,3 +106,13 @@ Personal project acceptance comes before commercial certification. No GitHub pus
 - [ ] Save the RS SDK Integration metadata in Store Admin and complete actual customer account sign-in/ownership activation evidence.
 - [ ] Actual Mac/Windows publisher pins and signing secrets, native Intel/Windows acceptance and packaged physical reboot/login certification.
 - [ ] Commercial Store product/repository/delivery/release verification and deliberate customer publication.
+
+## Separate installer repository — 2026-10-13
+
+- [x] Public remote-studio-releases repository, source link, immutable-release setting and source download Variables.
+- [x] Matching tag/package/version-note validation, native build/test/package gates and separate GitHub installer delivery.
+- [x] Hash-checked immutable assets, signed/notarized metadata from actual verified builds and Store OIDC verification submission.
+- [x] Generic uploader/ref/manifest regressions: 22 tests; typecheck/lint/SDK/public/config checks.
+- [ ] Final template regression and updated Mac/Windows CI confirmation.
+- [ ] Install GitHub App on download repo and set DOWNLOADS_APP_ID / DOWNLOADS_APP_PRIVATE_KEY, or set scoped DOWNLOADS_RELEASE_TOKEN.
+- [ ] Store RS SDK Integration, numeric source/download repository bindings and real paid activation acceptance.

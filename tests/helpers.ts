@@ -30,7 +30,12 @@ export async function fixture() {
     folders,
     cleanup: async () => {
       await result.engine.close();
-      await rm(root, { recursive: true, force: true });
+      await rm(root, {
+        recursive: true,
+        force: true,
+        maxRetries: 20,
+        retryDelay: 100,
+      });
     },
   };
   return result;

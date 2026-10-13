@@ -117,6 +117,7 @@ async function paidFixture(
 it("verifies signed paid claims and enforces both UI and MCP writes; encrypted license survives restart", async () => {
   const f = await paidFixture();
   const engine = new Engine(f.data, "a".repeat(64), () => {}, f.authority);
+  let closed = false;
   try {
     expect(await f.authority.status()).toMatchObject({
       valid: true,
@@ -149,6 +150,7 @@ it("verifies signed paid claims and enforces both UI and MCP writes; encrypted l
     expect(encrypted).not.toContain("fixture-activation");
     expect(encrypted).not.toContain("PRIVATE KEY");
     await engine.close();
+    closed = true;
     const next = new Licensing(f.data, () => {}, {
       config: f.config,
       fetch: async () => {
@@ -159,6 +161,7 @@ it("verifies signed paid claims and enforces both UI and MCP writes; encrypted l
     expect(await next.status()).toMatchObject({ valid: true, activated: true });
     await next.dispose();
   } finally {
+    if (!closed) await engine.close();
     await f.cleanup();
   }
 });

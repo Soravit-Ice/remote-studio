@@ -11,6 +11,10 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 test("ChatGPT settings encrypt the key, supervise the runtime, and restore on launch", async () => {
+  test.skip(
+    process.platform === "win32",
+    "This lifecycle fixture is a POSIX executable; official Windows tunnel acceptance is separate.",
+  );
   const root = await mkdtemp(join(tmpdir(), "rs-chatgpt-ui-"));
   const folder = join(root, "authorized"),
     data = join(root, "data"),

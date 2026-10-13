@@ -4,6 +4,8 @@ A local-first Electron desktop application that connects compatible AI assistant
 
 This source prepares a licensed release candidate. Real customer activation, signing and platform acceptance remain commercial release gates. The advanced and release milestones in the original brief remain tracked in [TASKS.md](TASKS.md).
 
+Source: [remote-studio](https://github.com/Soravit-Ice/remote-studio). Installers: [remote-studio-releases](https://github.com/Soravit-Ice/remote-studio-releases). Matching version tags build and test installers, publish immutable GitHub assets, and submit them to Store for verification. Follow the [Thai release setup guide](docs/RELEASE_TO_STORE_TH.md) before tagging.
+
 Thai usage manual: [Remote Studio and ChatGPT Web guide](docs/Remote-Studio-User-Guide-TH.docx). It covers local setup, reviewed operations, and the in-app Secure MCP Tunnel configuration flow.
 
 ## Run

@@ -59,3 +59,9 @@ One agent owns SDK state, including background mode. Electron's OS secure storag
 Development fixtures require an explicit unpackaged temporary-data test run. A packaged GUI ignores fixture environment flags; the packaged agent rejects the fixture switch. No production plaintext/enforcement fallback is permitted.
 
 This host has zero code-signing identities; Store's RS product is DRAFT and its SDK Integration record has not been saved. The candidate source and unsigned native package can be prepared, but signed customer release requires actual certificate pins, secrets and real account/platform acceptance. CI defaults to unsigned drafts and fails closed when a signed run lacks prerequisites. GitHub draft publication and commercial Store publication are separate deliberate steps.
+# Separate source and installers (2026-10-13)
+
+Remote Studio follows Precut's per-product public downloads repository architecture. The source remains public as authorized; installer delivery uses remote-studio-releases with immutable assets. A version-tagged caller invokes the trusted reusable workflow on main so Store's workflow_ref remains stable across versions while installer builds use the original tagged commit. A scoped App/PAT writes downloads, and original Actions OIDC submits RS verification. Store Admin publishes only after READY. Unsigned metadata remains truthful, and no broad developer credential is installed as a CI secret.
+
+Template Rollup resolves to 4.64.3 through npm/pnpm overrides matching the tested source lockfile, avoiding first-install transitive drift that produced the observed registry 404. Windows dot components pass to canonical containment checks; ambiguous names and escapes remain rejected. POSIX tunnel fixtures do not stand in for native Windows tunnel acceptance.
+

@@ -152,8 +152,10 @@ export class Security {
           .split("/")
           .some(
             (p) =>
-              /[ .]$/.test(p) ||
-              /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(p),
+              p !== "." &&
+              p !== ".." &&
+              (/[ .]$/.test(p) ||
+                /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(p)),
           ))
     )
       throw new Error(

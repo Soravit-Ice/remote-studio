@@ -64,6 +64,15 @@ it("builds and sees actual Astro/Next/full-stack/Electron templates under native
       });
       expect(created.status).toBe("applied");
       await finish(await call("project_install", { path }));
+      if (["astro", "electron", "react-vite", "tauri"].includes(template)) {
+        const rollup = JSON.parse(
+          await readFile(
+            join(ws.path, path, "node_modules/rollup/package.json"),
+            "utf8",
+          ),
+        );
+        expect(rollup.version).toBe("4.64.3");
+      }
       if (template === "next-fullstack")
         await finish(
           await call("project_run_script", { path, script: "setup" }),

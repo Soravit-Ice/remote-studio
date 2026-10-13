@@ -384,5 +384,13 @@ export default defineConfig({
       });
     }
   }
+  if (files["package.json"]) {
+    // Match the source lockfile rather than resolving a newly published Rollup
+    // tarball during the first install. Keep its native optional packages in sync.
+    const pkg = JSON.parse(files["package.json"]);
+    pkg.overrides = { ...pkg.overrides, rollup: "4.64.3" };
+    files["package.json"] = json(pkg);
+    files["pnpm-workspace.yaml"] = "overrides:\n  rollup: 4.64.3\n";
+  }
   return files;
 }

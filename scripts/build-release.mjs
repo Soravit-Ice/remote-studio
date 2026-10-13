@@ -2,6 +2,7 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { readdir, readFile, writeFile } from "node:fs/promises";
 import { createHash, X509Certificate } from "node:crypto";
 import { join, resolve } from "node:path";
+import { createReleaseManifest } from "./release-manifest.mjs";
 const platform = process.env.RELEASE_PLATFORM ?? process.platform;
 const arch = process.env.RELEASE_ARCH ?? process.arch;
 if (
@@ -176,6 +177,10 @@ await writeFile(
   join("release", `checksums-${platform}-${arch}.sha256`),
   `${digest}  ${expected}\n`,
 );
+await createReleaseManifest(resolve("release"), pkg.version, platform, arch, {
+  codeSigned: signed,
+  notarized: signed && platform === "darwin",
+});
 console.log(
   `Built ${expected}; signed=${signed}. Draft release requires review before publication.`,
 );

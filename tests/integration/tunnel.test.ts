@@ -113,26 +113,31 @@ describe("secure tunnel management", () => {
     write: false,
     autoStart: false,
   });
-  it("refuses an already running tunnel ID without replacing grants or stopping the other runtime", async () => {
-    const saved = await controller.save(settings());
-    const original = await readFile(join(root, "chatgpt", "config.json"));
-    dependencies.checkConflict = async () => ({
-      pid: 12345,
-      profile: "localbridge",
-    });
-    await expect(controller.start()).rejects.toThrow("profile localbridge");
-    expect(controller.snapshot()).toMatchObject({
-      phase: "error",
-      ready: false,
-    });
-    expect(await readFile(join(root, "chatgpt", "config.json"))).toEqual(
-      original,
-    );
-    expect(grants.get(saved.clientId!)!.revoked).toBe(false);
-    expect(
-      (await readdir(join(root, "chatgpt"))).some((n) => n.startsWith("run-")),
-    ).toBe(false);
-  });
+  it.skipIf(process.platform === "win32")(
+    "refuses an already running tunnel ID without replacing grants or stopping the other runtime",
+    async () => {
+      const saved = await controller.save(settings());
+      const original = await readFile(join(root, "chatgpt", "config.json"));
+      dependencies.checkConflict = async () => ({
+        pid: 12345,
+        profile: "localbridge",
+      });
+      await expect(controller.start()).rejects.toThrow("profile localbridge");
+      expect(controller.snapshot()).toMatchObject({
+        phase: "error",
+        ready: false,
+      });
+      expect(await readFile(join(root, "chatgpt", "config.json"))).toEqual(
+        original,
+      );
+      expect(grants.get(saved.clientId!)!.revoked).toBe(false);
+      expect(
+        (await readdir(join(root, "chatgpt"))).some((n) =>
+          n.startsWith("run-"),
+        ),
+      ).toBe(false);
+    },
+  );
   it("detects direct/profile routing collisions while excluding its own process and explicit overrides", async () => {
     const tunnelId = settings().tunnelId;
     const other = "tunnel_ffffffffffffffffffffffffffffffff";
@@ -225,67 +230,77 @@ describe("secure tunnel management", () => {
     expect(grants.get(rotated.clientId!)!.revoked).toBe(true);
     expect(await readdir(join(root, "chatgpt"))).toEqual([]);
   });
-  it("runs only one owned process group, redacts split logs, and stops its child", async () => {
-    await controller.save(settings());
-    const [first, second] = await Promise.all([
-      controller.start(),
-      controller.start(),
-    ]);
-    expect(first.phase).toBe("ready");
-    expect(second.ready).toBe(true);
-    expect(first.lastPollAt).toBeNull(); // Local readiness never proves OpenAI access.
-    expect(first.bridge?.toolCount).toBe(21);
-    await expect.poll(() => controller.snapshot().logs).toContain("[REDACTED]");
-    expect(controller.snapshot().logs).not.toContain(key);
-    const runs = (await readdir(join(root, "chatgpt"))).filter((name) =>
-      name.startsWith("run-"),
-    );
-    expect(runs).toHaveLength(1);
-    const processes = JSON.parse(
-      await readFile(
-        join(root, "chatgpt", runs[0], "fixture-processes.json"),
-        "utf8",
-      ),
-    );
-    expect(processes.args).not.toContain(key);
-    await controller.stop();
-    expect(controller.snapshot()).toMatchObject({
-      phase: "stopped",
-      live: false,
-      ready: false,
-    });
-    await expect
-      .poll(() => {
-        try {
-          process.kill(processes.worker, 0);
-          return true;
-        } catch {
-          return false;
-        }
-      })
-      .toBe(false);
-  });
-  it("refuses plaintext fallback and fails closed before spawning when bridge or grant fails", async () => {
-    available = false;
-    await expect(controller.save(settings())).rejects.toThrow(
-      "encrypted credential storage",
-    );
-    expect(await readdir(join(root, "chatgpt"))).toEqual([]);
-    available = true;
-    await controller.save(settings());
-    bridgeFails = true;
-    await expect(controller.start()).rejects.toThrow(
-      "bridge diagnostic failed",
-    );
-    expect(controller.snapshot().phase).toBe("error");
-    expect(
-      (await readdir(join(root, "chatgpt"))).some((n) => n.startsWith("run-")),
-    ).toBe(false);
-    bridgeFails = false;
-    grants.get(controller.snapshot().clientId!)!.revoked = true;
-    await expect(controller.start()).rejects.toThrow("revoked");
-    expect(controller.snapshot().bridge).toBeNull();
-  });
+  it.skipIf(process.platform === "win32")(
+    "runs only one owned process group, redacts split logs, and stops its child",
+    async () => {
+      await controller.save(settings());
+      const [first, second] = await Promise.all([
+        controller.start(),
+        controller.start(),
+      ]);
+      expect(first.phase).toBe("ready");
+      expect(second.ready).toBe(true);
+      expect(first.lastPollAt).toBeNull(); // Local readiness never proves OpenAI access.
+      expect(first.bridge?.toolCount).toBe(21);
+      await expect
+        .poll(() => controller.snapshot().logs)
+        .toContain("[REDACTED]");
+      expect(controller.snapshot().logs).not.toContain(key);
+      const runs = (await readdir(join(root, "chatgpt"))).filter((name) =>
+        name.startsWith("run-"),
+      );
+      expect(runs).toHaveLength(1);
+      const processes = JSON.parse(
+        await readFile(
+          join(root, "chatgpt", runs[0], "fixture-processes.json"),
+          "utf8",
+        ),
+      );
+      expect(processes.args).not.toContain(key);
+      await controller.stop();
+      expect(controller.snapshot()).toMatchObject({
+        phase: "stopped",
+        live: false,
+        ready: false,
+      });
+      await expect
+        .poll(() => {
+          try {
+            process.kill(processes.worker, 0);
+            return true;
+          } catch {
+            return false;
+          }
+        })
+        .toBe(false);
+    },
+  );
+  it.skipIf(process.platform === "win32")(
+    "refuses plaintext fallback and fails closed before spawning when bridge or grant fails",
+    async () => {
+      available = false;
+      await expect(controller.save(settings())).rejects.toThrow(
+        "encrypted credential storage",
+      );
+      expect(await readdir(join(root, "chatgpt"))).toEqual([]);
+      available = true;
+      await controller.save(settings());
+      bridgeFails = true;
+      await expect(controller.start()).rejects.toThrow(
+        "bridge diagnostic failed",
+      );
+      expect(controller.snapshot().phase).toBe("error");
+      expect(
+        (await readdir(join(root, "chatgpt"))).some((n) =>
+          n.startsWith("run-"),
+        ),
+      ).toBe(false);
+      bridgeFails = false;
+      grants.get(controller.snapshot().clientId!)!.revoked = true;
+      await expect(controller.start()).rejects.toThrow("revoked");
+      expect(controller.snapshot().bridge).toBeNull();
+    },
+  );
   it("removes inherited transport/secret overrides and validates owned loopback URLs", () => {
     process.env.MCP_SERVER_URL = "https://attacker.invalid";
     process.env.CONTROL_PLANE_BASE_URL = "https://attacker.invalid";
