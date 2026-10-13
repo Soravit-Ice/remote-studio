@@ -301,7 +301,7 @@ export async function spawnSandbox(
     stdio:
       process.platform === "darwin"
         ? ["pipe", "pipe", "pipe", "pipe", "pipe", "pipe"]
-        : ["pipe", "pipe", "pipe"],
+        : ["pipe", "pipe", "pipe", "pipe"],
   };
   if (process.platform === "darwin") {
     const policyDir = existsSync(join(serviceDirectory(), "policies"))
@@ -429,6 +429,8 @@ export async function spawnSandbox(
     options,
   );
   child.on("error", () => {});
+  const release = child.stdio[3] as import("node:stream").Writable;
+  release.on("error", () => {});
   try {
     await trackSandbox(child, privateRoot, {
       id: launchId,
@@ -436,7 +438,17 @@ export async function spawnSandbox(
       reads: roots,
       helper: helperPath(),
     });
+    await new Promise<void>((res, rej) =>
+      release.write(Buffer.from([1]), (error) => {
+        if (error) rej(error);
+        else {
+          release.end();
+          res();
+        }
+      }),
+    );
   } catch (error) {
+    release.destroy();
     child.kill();
     throw error;
   }

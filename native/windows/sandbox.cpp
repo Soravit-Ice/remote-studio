@@ -12,6 +12,8 @@
 #include <iostream>
 #include <filesystem>
 #include <cwctype>
+#include <io.h>
+#include <cstdint>
 #pragma comment(lib, "userenv.lib")
 #pragma comment(lib, "advapi32.lib")
 
@@ -93,6 +95,31 @@ int wmain(int argc, wchar_t** argv) {
   std::wstring name, sidString;
   int split = argc, exitCode = 1;
   try {
+    // A native query avoids PowerShell startup and returns an empty identity for
+    // an exited process. Preserve the DateTime tick epoch used by old records.
+    if (argc == 3 && std::wstring(argv[1]) == L"--process-identity") {
+      std::wstring value = argv[2];
+      check(!value.empty() && value.find_first_not_of(L"0123456789") == std::wstring::npos, "Invalid process ID");
+      auto parsed = std::stoull(value);
+      check(parsed > 1 && parsed <= MAXDWORD, "Invalid process ID");
+      HANDLE process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION | SYNCHRONIZE, FALSE, static_cast<DWORD>(parsed));
+      if (!process && GetLastError() == ERROR_INVALID_PARAMETER) return 0;
+      check(process != nullptr, "Cannot inspect native process");
+      if (WaitForSingleObject(process, 0) == WAIT_OBJECT_0) { CloseHandle(process); return 0; }
+      FILETIME birth{}, exit{}, kernel{}, user{};
+      bool ok = GetProcessTimes(process, &birth, &exit, &kernel, &user);
+      CloseHandle(process); check(ok, "Cannot read native process birth");
+      std::uint64_t ticks = (static_cast<std::uint64_t>(birth.dwHighDateTime) << 32) | birth.dwLowDateTime;
+      std::cout << ticks + 504911232000000000ULL << std::endl;
+      return 0;
+    }
+    // libuv passes fd 3 through MSVCRT. Only the trusted supervisor owns its
+    // write end; LPAC children inherit the explicit stdin/stdout/stderr allowlist.
+    if (argc > 1 && std::wstring(argv[1]) != L"--cleanup") {
+      unsigned char release = 0;
+      check(_read(3, &release, 1) == 1 && release == 1, "Native launch authorization pipe closed");
+      _close(3);
+    }
     for (int i = 1; i < argc; ++i) {
       std::wstring arg = argv[i];
       if (arg == L"--") { split = i + 1; break; }

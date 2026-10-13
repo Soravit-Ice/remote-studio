@@ -15,7 +15,10 @@ export async function createReleaseManifest(
     !/^\d+\.\d+\.\d+$/.test(version) ||
     !["darwin", "win32"].includes(platform) ||
     !["arm64", "x64"].includes(architecture) ||
-    (platform === "win32" && architecture !== "x64")
+    (platform === "win32" && architecture !== "x64") ||
+    typeof signing.codeSigned !== "boolean" ||
+    typeof signing.notarized !== "boolean" ||
+    (signing.notarized && (!signing.codeSigned || platform !== "darwin"))
   )
     throw new Error("Unsupported release target/version.");
   const extension = platform === "darwin" ? ".dmg" : ".exe";
@@ -28,7 +31,7 @@ export async function createReleaseManifest(
   const fileName = files[0],
     path = join(directory, fileName),
     details = await lstat(path);
-  if (!details.isFile() || details.size < 1 || details.size > 8 * 1024 ** 3)
+  if (!details.isFile() || details.size < 1 || details.size >= 2 * 1024 ** 3)
     throw new Error("Installer size/type invalid.");
   const hash = createHash("sha256");
   for await (const chunk of createReadStream(path)) hash.update(chunk);

@@ -45,13 +45,8 @@ async function identity(pid: number) {
     return (await processes()).find((p) => p.pid === pid)?.identity ?? "";
   if (process.platform === "win32") {
     const { stdout } = await run(
-      "powershell.exe",
-      [
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        `$p = Get-Process -Id ${pid} -ErrorAction SilentlyContinue; if ($p) { $p.StartTime.ToUniversalTime().Ticks }`,
-      ],
+      join(nativeRuntimeDirectory(), "studio-sandbox.exe"),
+      ["--process-identity", String(pid)],
       { timeout: 5000, windowsHide: true },
     );
     return stdout.trim();
