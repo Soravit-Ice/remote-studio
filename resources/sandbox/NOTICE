@@ -1,0 +1,3 @@
+Seatbelt baselines derived from openai/codex, commit 27065a91ccbf5ba8532844be3777fcf83b77820d.
+Copyright OpenAI. Apache License 2.0. See LICENSE-OpenAI.
+Source: https://github.com/openai/codex/tree/27065a91ccbf5ba8532844be3777fcf83b77820d/codex-rs/sandboxing/src

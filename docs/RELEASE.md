@@ -1,0 +1,15 @@
+# Remote Studio release
+
+`product.config.json` contains public identifiers and public entitlement verification keys. It binds RS, com.t2etech.remotestudio, the registered public OAuth client and its exact callback. DESKTOP_OAUTH_CLIENTS_JSON belongs to the deployed Store, not the desktop app. The Store currently has a draft Remote Studio product; save the same configuration in Admin → SDK Integration and complete product/release setup there. Do not put service keys, SDK signing keys, certificate passwords, tunnel keys or installation state in this repository.
+
+The SDK archive, signed manifest and separately pinned public release key are vendored with the owner's explicit authorization for this public repository. `pnpm verify:sdk`, `pnpm check:release` and `pnpm check:public` verify the source package before release. Public source visibility does not grant a new open-source license; package metadata remains UNLICENSED.
+
+License storage uses an installation-specific 32-byte key protected by Electron safeStorage. The authenticated local agent owns encrypted SDK state and verifies paid export-feature claims at every protected entry point and command launch. The existing RS Store policy names its development entitlement `export`; this integration uses that exact feature. Trial execution is disabled because RS has no configured trial policy. Never infer access from a signed-in account or displayed license tier.
+
+The development fixture is limited to explicitly requested unpackaged test runs in disposable temporary data. Packaged GUI launches ignore STUDIO_TEST_LICENSE, and the packaged agent rejects --test-license. Tests with generated signing keys use separate temporary storage; they do not activate or consume real customer licenses.
+
+Run typecheck, lint, the Vitest suite and the source Electron suite before a candidate. Build a native package and run tests/e2e/license.spec.ts plus scripts/smoke-desktop.mjs --recovery against it. The packaged negative test must initialize real encrypted SDK storage and reject protected writes without activation even when STUDIO_TEST_LICENSE is present.
+
+GitHub Actions → Build draft release creates native Mac arm64/Intel and Windows x64 installers, checksums and a draft prerelease. It never publishes a commercial Store release. Unsigned is the default while certificate pins are absent. For a signed run, first set actual Apple Team IDs and Windows signer SPKI hashes in product.config.json, then provide CSC_LINK, CSC_KEY_PASSWORD and Mac APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD, APPLE_TEAM_ID in the protected release-signing environment. Signed runs fail if prerequisites are missing; they never downgrade to unsigned.
+
+Before public customer release, record a real Store account sign-in and automatic callback, ownership-bound activation for RS, another-product rejection, restart/offline/expiry/revocation and native installer acceptance on each shipped platform. Complete the Store product status, repository binding, delivery, SDK configuration and release verification before selling. This repository does not fabricate signing certificates or Store entitlements.

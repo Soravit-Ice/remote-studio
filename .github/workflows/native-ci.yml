@@ -1,0 +1,58 @@
+name: Native verification
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify:sdk
+      - run: pnpm check:release
+      - run: pnpm check:public
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm test
+      - run: pnpm test:e2e
+      - run: pnpm exec electron-builder --dir -c.mac.identity=null -c.mac.notarize=false
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Packaged native MCP and Electron verification
+        shell: pwsh
+        run: |
+          if ($IsWindows) {
+            $env:STUDIO_NATIVE_NODE = (Resolve-Path 'release/win-unpacked/Remote Studio.exe').Path
+            $env:STUDIO_NATIVE_SERVICES = (Resolve-Path 'release/win-unpacked/resources/services').Path
+          } else {
+            $bundle = Get-ChildItem release -Directory -Filter 'mac*' | Select-Object -First 1
+            $env:STUDIO_NATIVE_NODE = (Resolve-Path "$($bundle.FullName)/Remote Studio.app/Contents/MacOS/Remote Studio").Path
+            $env:STUDIO_NATIVE_SERVICES = (Resolve-Path "$($bundle.FullName)/Remote Studio.app/Contents/Resources/services").Path
+          }
+          pnpm exec vitest run tests/integration/native-workflow.test.ts
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:STUDIO_ELECTRON_EXE = $env:STUDIO_NATIVE_NODE
+          pnpm exec playwright test tests/e2e/license.spec.ts
+          exit $LASTEXITCODE
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: native-${{ matrix.os }}
+          path: |
+            release/
+            test-results/
+            test-artifacts/

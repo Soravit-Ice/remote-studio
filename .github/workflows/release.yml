@@ -1,0 +1,92 @@
+name: Build draft release
+on:
+  workflow_dispatch:
+    inputs:
+      signed:
+        description: Sign installers (requires publisher pins and signing secrets)
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: remote-studio-release-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            platform: darwin
+            arch: arm64
+          - os: macos-15-intel
+            platform: darwin
+            arch: x64
+          - os: windows-2025
+            platform: win32
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    environment: release-signing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.5.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm verify:sdk
+      - run: pnpm check:public
+      - run: pnpm check:release
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm build
+      - run: pnpm test:core
+      - run: pnpm exec playwright test
+      - name: Build installers
+        shell: bash
+        env:
+          SIGNED_RELEASE: ${{ inputs.signed }}
+          RELEASE_PLATFORM: ${{ matrix.platform }}
+          RELEASE_ARCH: ${{ matrix.arch }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: node scripts/build-release.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            release/remote-studio-*.dmg
+            release/remote-studio-*.exe
+            release/checksums-*.sha256
+          if-no-files-found: error
+  draft:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          path: installers
+          merge-multiple: true
+      - name: Create draft for review
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SIGNED_RELEASE: ${{ inputs.signed }}
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          TAG="v${VERSION}-rc.${GITHUB_RUN_NUMBER}"
+          gh release create "$TAG" installers/* --target "$GITHUB_SHA" --draft --prerelease --title "Remote Studio $VERSION release candidate" --notes-file docs/RELEASE_NOTES.md

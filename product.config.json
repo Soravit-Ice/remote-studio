@@ -1,0 +1,31 @@
+{
+  "appId": "com.t2etech.remotestudio",
+  "oauthClientId": "42332f55-29df-42ee-9aba-56fa8fd937eb",
+  "installerPublishers": {
+    "macTeamIds": [],
+    "windowsSpkiSha256": []
+  },
+  "schemaVersion": 1,
+  "sdkVersion": "1.0.0-rc.1",
+  "runtime": "electron",
+  "productCode": "RS",
+  "productName": "Remote Studio",
+  "licenseApiOrigin": "https://store.t2etech.com",
+  "licenseIssuer": "https://api.store.t2etech.com",
+  "licenseJwks": {
+    "keys": [
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "kid": "t2e-license-v1",
+        "x": "oNdkBD6ich0j_mCJrmd4teqWOPjBXq1Gocgi7ne2GdY",
+        "alg": "EdDSA",
+        "use": "sig"
+      }
+    ]
+  },
+  "jwksMode": "store-keyring",
+  "trialEnabled": false,
+  "supabaseUrl": "https://blsbgmiaeaqiubyeailz.supabase.co",
+  "oauthRedirectUri": "com.t2etech.remotestudio://oauth/callback"
+}

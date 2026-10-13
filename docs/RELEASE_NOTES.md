@@ -1,0 +1,5 @@
+Remote Studio integrates the signed T2ETECH License SDK for product RS. Sign in through the registered public OAuth client or activate a license key in Settings → License. OS-encrypted installation storage protects SDK state. The local agent verifies signed license claims before file changes, command creation and command launch; MCP calls use the same enforcement. Workspace setup, browsing and stopping owned work remain available without activation.
+
+macOS workspace authorization now persists the volume UUID, directory inode and birth identity. Re-authorize folder recovers an original folder without deleting workspace or connection setup.
+
+This is a release candidate. Unsigned drafts require the user's platform installation handling. A signed build requires actual publisher pins, native signing credentials and platform verification. Real Store purchase/sign-in/activation, reboot/login lifecycle, Windows and Intel acceptance must be recorded before commercial publication. No installer is silently opened or installed.

@@ -1,0 +1,155 @@
+{
+  "name": "remotestudio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Local-first MCP desktop execution studio",
+  "author": "T2ETECH",
+  "license": "UNLICENSED",
+  "main": "out/main/index.js",
+  "packageManager": "pnpm@11.5.2",
+  "engines": {
+    "node": ">=22.16"
+  },
+  "scripts": {
+    "dev": "pnpm build:services && electron-vite dev",
+    "dev:desktop": "pnpm dev",
+    "dev:agent": "tsx services/local-agent/src/index.ts",
+    "build:services": "node scripts/build-services.mjs",
+    "build": "pnpm build:services && electron-vite build",
+    "start": "electron-vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "pnpm build:services && vitest run",
+    "test:integration": "pnpm build:services && vitest run tests/integration",
+    "test:mcp": "pnpm build:services && vitest run tests/integration/mcp.test.ts",
+    "test:e2e": "pnpm build && playwright test",
+    "doctor": "tsx scripts/doctor.ts",
+    "dist:mac": "pnpm build && electron-builder --mac",
+    "dist:mac:local": "pnpm build && electron-builder --dir --mac --arm64 -c.directories.output=release/personal -c.mac.identity=null -c.mac.notarize=false",
+    "dist:win": "pnpm build && electron-builder --win",
+    "dist:dir": "pnpm build && electron-builder --dir",
+    "test:core": "pnpm build:services && vitest run --exclude tests/integration/templates.test.ts",
+    "test:templates": "pnpm build:services && vitest run tests/integration/templates.test.ts",
+    "verify:sdk": "node vendor/verify-package.mjs vendor/manifest.json vendor/manifest.sig vendor/sdk-release-public-key.json",
+    "check:release": "node scripts/check-release.mjs",
+    "check:public": "node scripts/scan-public-source.mjs"
+  },
+  "dependencies": {
+    "@hookform/resolvers": "5.9.1",
+    "@modelcontextprotocol/client": "2.3.1",
+    "@modelcontextprotocol/server": "2.3.1",
+    "@radix-ui/react-dialog": "1.2.0",
+    "@radix-ui/react-slot": "1.4.0",
+    "@radix-ui/react-switch": "1.3.8",
+    "@radix-ui/react-tooltip": "1.3.0",
+    "@t2e/license-sdk": "file:vendor/t2e-license-sdk-1.0.0-rc.1.tgz",
+    "@tanstack/react-query": "5.104.1",
+    "axe-core": "4.14.0",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "fflate": "0.8.3",
+    "lucide-react": "1.54.0",
+    "pino": "10.4.0",
+    "pixelmatch": "8.0.0",
+    "playwright-core": "1.64.0",
+    "pngjs": "7.0.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-hook-form": "7.89.0",
+    "tailwind-merge": "3.7.0",
+    "yaml": "2.9.1",
+    "zod": "4.6.5",
+    "zustand": "5.0.15"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.0",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "26.6.4",
+    "@types/pngjs": "6.0.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "5.2.0",
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3",
+    "electron-vite": "5.0.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.12.0",
+    "globals": "17.13.0",
+    "node-api-headers": "1.9.0",
+    "prettier": "3.9.10",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.1",
+    "vite": "7.3.7",
+    "vitest": "5.0.3"
+  },
+  "build": {
+    "appId": "com.t2etech.remotestudio",
+    "productName": "Remote Studio",
+    "asar": true,
+    "directories": {
+      "output": "release",
+      "buildResources": "resources"
+    },
+    "files": [
+      "out/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "dist/services",
+        "to": "services"
+      },
+      {
+        "from": "product.config.json",
+        "to": "product.config.json"
+      },
+      {
+        "from": "resources/licenses",
+        "to": "licenses"
+      }
+    ],
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.developer-tools",
+      "hardenedRuntime": true,
+      "entitlements": "resources/entitlements.mac.plist",
+      "notarize": true
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "deleteAppDataOnUninstall": false
+    },
+    "protocols": [
+      {
+        "name": "Remote Studio sign in",
+        "schemes": [
+          "com.t2etech.remotestudio"
+        ]
+      }
+    ],
+    "artifactName": "remote-studio-${version}-${os}-${arch}.${ext}"
+  }
+}

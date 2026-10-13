@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+  - services/*
+allowBuilds:
+  electron: true
+  esbuild: true
+  electron-winstaller: false
+minimumReleaseAgeExclude:
+  - prettier@3.9.10
