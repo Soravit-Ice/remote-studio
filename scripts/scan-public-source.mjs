@@ -1,6 +1,7 @@
 import { execFileSync } from "node:child_process";
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
+import { unzipSync } from "fflate";
 // Exact synthetic keys used exclusively by temporary loopback tunnel fixtures.
 const fixtureHashes = {
   "tests/e2e/tunnel.spec.ts": [
@@ -39,9 +40,14 @@ for (const file of files) {
     continue;
   }
   if (file === "vendor/t2e-license-sdk-1.0.0-rc.1.tgz") continue;
+  const source = await readFile(file);
   const bytes = file.endsWith(".docx")
-    ? execFileSync("unzip", ["-p", file, "word/document.xml"])
-    : await readFile(file);
+    ? Buffer.from(
+        unzipSync(source, {
+          filter: (entry) => entry.name === "word/document.xml",
+        })["word/document.xml"],
+      )
+    : source;
   if (bytes.includes(0)) continue;
   let text = bytes.toString("utf8");
   for (const digest of fixtureHashes[file] ?? []) {
