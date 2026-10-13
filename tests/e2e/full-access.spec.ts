@@ -90,6 +90,11 @@ test("Full Access UI applies files and runs a native command without another app
     await page.screenshot({ path: "test-results/full-access.png" });
   } finally {
     await app.close();
-    await rm(root, { recursive: true, force: true });
+    await rm(root, {
+      recursive: true,
+      force: true,
+      maxRetries: 20,
+      retryDelay: 100,
+    });
   }
 });

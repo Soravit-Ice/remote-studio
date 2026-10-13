@@ -167,6 +167,11 @@ test("local folder recovery handles cancellation, restores Full Access and persi
     expect(write.status).toBe("applied");
   } finally {
     await app.close();
-    await rm(root, { recursive: true, force: true });
+    await rm(root, {
+      recursive: true,
+      force: true,
+      maxRetries: 20,
+      retryDelay: 100,
+    });
   }
 });

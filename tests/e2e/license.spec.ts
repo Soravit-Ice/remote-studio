@@ -78,6 +78,11 @@ test("real SDK initializes encrypted storage and unactivated source/package bloc
     ).toHaveLength(0);
   } finally {
     await app.close();
-    await rm(root, { recursive: true, force: true });
+    await rm(root, {
+      recursive: true,
+      force: true,
+      maxRetries: 20,
+      retryDelay: 100,
+    });
   }
 });

@@ -154,6 +154,11 @@ test("ChatGPT settings encrypt the key, supervise the runtime, and restore on la
     expect(errors).toEqual([]);
   } finally {
     await app.close();
-    await rm(root, { recursive: true, force: true });
+    await rm(root, {
+      recursive: true,
+      force: true,
+      maxRetries: 20,
+      retryDelay: 100,
+    });
   }
 });

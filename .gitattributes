@@ -1,0 +1,8 @@
+* text=auto eol=lf
+# The signature covers these exact manifest bytes; never apply checkout conversion.
+vendor/manifest.json -text
+*.tgz binary
+*.docx binary
+*.png binary
+*.ico binary
+*.icns binary

@@ -147,7 +147,12 @@ test("development UI displays actual verified plans, imports inert skills and st
     expect(errors).toEqual([]);
   } finally {
     await app.close();
-    await rm(root, { recursive: true, force: true });
+    await rm(root, {
+      recursive: true,
+      force: true,
+      maxRetries: 20,
+      retryDelay: 100,
+    });
   }
 });
 
@@ -265,6 +270,11 @@ test("opt-in background helper preserves an authorized job after Quit and releas
         s.resume();
       });
     }
-    await rm(root, { recursive: true, force: true });
+    await rm(root, {
+      recursive: true,
+      force: true,
+      maxRetries: 20,
+      retryDelay: 100,
+    });
   }
 });
