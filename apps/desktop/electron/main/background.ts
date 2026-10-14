@@ -7,7 +7,13 @@ import { spawn, execFile } from "node:child_process";
 import { promisify } from "node:util";
 import { createHash } from "node:crypto";
 import { z } from "zod";
-import { tunnelSettingsSchema } from "../../../../packages/contracts/src/index";
+import { GeminiController } from "../../../../packages/gemini/src/index";
+import type { GeminiStatus } from "../../../../packages/contracts/src/index";
+import {
+  tunnelSettingsSchema,
+  geminiSettingsSchema,
+  id,
+} from "../../../../packages/contracts/src/index";
 import { sameSecret } from "../../../../packages/security/src/index";
 import {
   TunnelController,
@@ -94,10 +100,44 @@ export class TunnelProxy {
     return backgroundCall(this.data, this.token, "selectRuntime", path);
   }
 }
+export class GeminiProxy {
+  constructor(
+    readonly data: string,
+    readonly token: string,
+  ) {}
+  snapshot(): Promise<GeminiStatus> {
+    return backgroundCall(this.data, this.token, "gemini:snapshot");
+  }
+  autoStart() {
+    return backgroundCall(this.data, this.token, "gemini:autoStart");
+  }
+  save(input: unknown) {
+    return backgroundCall(this.data, this.token, "gemini:save", input);
+  }
+  start() {
+    return backgroundCall(this.data, this.token, "gemini:start");
+  }
+  stop() {
+    return backgroundCall(this.data, this.token, "gemini:stop");
+  }
+  test() {
+    return backgroundCall(this.data, this.token, "gemini:test");
+  }
+  forget() {
+    return backgroundCall(this.data, this.token, "gemini:forget");
+  }
+  selectRuntime(path: string) {
+    return backgroundCall(this.data, this.token, "gemini:selectRuntime", path);
+  }
+  approve(input: { id: string; allow: boolean }) {
+    return backgroundCall(this.data, this.token, "gemini:approve", input);
+  }
+}
 export async function serveBackground(
   data: string,
   token: string,
   controller: TunnelController,
+  gemini: GeminiController,
 ) {
   const lockWindow = new BrowserWindow({
     show: false,
@@ -118,6 +158,12 @@ export async function serveBackground(
       : [],
   );
   await controller.autoStart();
+  await gemini.initialize(
+    process.platform === "darwin"
+      ? ["/opt/homebrew/bin/cloudflared", "/usr/local/bin/cloudflared"]
+      : [],
+  );
+  await gemini.autoStart();
   if (process.platform !== "win32")
     await unlink(endpoint(data)).catch(() => {});
   const server = createServer((socket) => {
@@ -138,6 +184,15 @@ export async function serveBackground(
             token: z.string().max(256),
             method: z.enum([
               "ping",
+              "gemini:snapshot",
+              "gemini:autoStart",
+              "gemini:save",
+              "gemini:start",
+              "gemini:stop",
+              "gemini:test",
+              "gemini:forget",
+              "gemini:selectRuntime",
+              "gemini:approve",
               "snapshot",
               "save",
               "start",
@@ -155,6 +210,43 @@ export async function serveBackground(
           throw new Error("Unauthorized background request.");
         let result;
         switch (request.method) {
+          case "gemini:snapshot":
+            result = gemini.snapshot();
+            break;
+          case "gemini:autoStart":
+            await gemini.autoStart();
+            result = gemini.snapshot();
+            break;
+          case "gemini:save":
+            result = await gemini.save(
+              geminiSettingsSchema.parse(request.input),
+            );
+            break;
+          case "gemini:start":
+            result = await gemini.start();
+            break;
+          case "gemini:stop":
+            result = await gemini.stop();
+            break;
+          case "gemini:test":
+            result = await gemini.test();
+            break;
+          case "gemini:forget":
+            result = await gemini.forget();
+            break;
+          case "gemini:selectRuntime":
+            result = await gemini.selectRuntime(
+              z.string().parse(request.input),
+            );
+            break;
+          case "gemini:approve":
+            result = await gemini.approve(
+              z
+                .object({ id, allow: z.boolean() })
+                .strict()
+                .parse(request.input),
+            );
+            break;
           case "ping":
             result = { pid: process.pid };
             break;
@@ -189,6 +281,7 @@ export async function serveBackground(
             break;
           case "shutdown":
             await controller.stop();
+            await gemini.stop();
             result = { stopped: true };
             setTimeout(() => app.quit(), 200);
             break;
@@ -208,6 +301,7 @@ export async function serveBackground(
   if (process.platform !== "win32") await chmod(endpoint(data), 0o600);
   const stop = async () => {
     await controller.stop();
+    await gemini.stop();
     server.close();
     if (process.platform !== "win32")
       await unlink(endpoint(data)).catch(() => {});

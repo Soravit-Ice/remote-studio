@@ -79,6 +79,10 @@ it("MCP v2 handshake, schema validation, file patch/undo, and job survives clien
         "project_install",
         "preview_start",
         "job_input",
+        "video_guide",
+        "video_project_create",
+        "video_render",
+        "video_status",
       ]),
     );
     expect(
@@ -92,6 +96,14 @@ it("MCP v2 handshake, schema validation, file patch/undo, and job survives clien
       arguments: {},
     });
     expect(folders.isError).not.toBe(true);
+    const videoGuide = await client.callTool({
+      name: "video_guide",
+      arguments: {},
+    });
+    expect(videoGuide.isError).not.toBe(true);
+    expect((videoGuide.structuredContent as any).data.framework).toBe(
+      "HyperFrames",
+    );
     const identity = await rpc<any>(directory, token, "server.identity");
     expect(client.getServerVersion()?.title).toBe(
       `Remote Studio · ${identity.serverId}`,
@@ -252,6 +264,53 @@ it("MCP v2 handshake, schema validation, file patch/undo, and job survives clien
     expect(((reconnected.structuredContent as any).data as any).exitCode).toBe(
       0,
     );
+    // Transport-only fixture: use the actual completed job and owned immutable
+    // PNG to exercise video_status image blocks. Real rendering is covered by
+    // the separately opt-in HyperFrames runtime acceptance test.
+    const reportDirectory = "renders/transport-video";
+    await mkdir(join(w.path, reportDirectory, "frames"), { recursive: true });
+    await writeFile(
+      join(w.path, reportDirectory, "frames/transport-fixture.png"),
+      bytes,
+    );
+    await writeFile(
+      join(w.path, reportDirectory, "report.json"),
+      JSON.stringify({
+        ok: true,
+        operation: "snapshot",
+        frames: [reportDirectory + "/frames/transport-fixture.png"],
+      }),
+    );
+    const videoDatabase = new DatabaseSync(join(directory, "studio.sqlite"));
+    try {
+      videoDatabase.prepare("INSERT INTO records VALUES(?,?,?)").run(
+        "videoRun",
+        job.id,
+        JSON.stringify({
+          jobId: job.id,
+          workspaceId: w.id,
+          clientId,
+          path: ".",
+          operation: "snapshot",
+          revision: "transport-fixture",
+          directory: reportDirectory,
+          artifacts: [artifactId],
+        }),
+      );
+    } finally {
+      videoDatabase.close();
+    }
+    const videoFrames = await client.callTool({
+      name: "video_status",
+      arguments: { workspaceId: w.id, jobId: job.id },
+    });
+    expect(videoFrames.isError).not.toBe(true);
+    expect((videoFrames.structuredContent as any).data.verified).toBe(true);
+    const frameBlock = videoFrames.content?.find(
+      (block: any) => block.type === "image",
+    ) as any;
+    expect(frameBlock.mimeType).toBe("image/png");
+    expect(Buffer.from(frameBlock.data, "base64")).toEqual(bytes);
   } finally {
     await client?.close();
     agent.kill("SIGTERM");

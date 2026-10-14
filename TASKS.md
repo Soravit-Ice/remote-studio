@@ -121,3 +121,25 @@ Personal project acceptance comes before commercial certification. No GitHub pus
 - [ ] Final updated Mac native CI outcome; Windows runtime ACL setup (native permission error 5) and full native acceptance before all-target release.
 - [ ] Install GitHub App on download repo and set DOWNLOADS_APP_ID / DOWNLOADS_APP_PRIVATE_KEY, or set scoped DOWNLOADS_RELEASE_TOKEN.
 - [ ] Store RS SDK Integration, numeric source/download repository bindings and real paid activation acceptance.
+
+## Gemini Web connector — 2026-10-14
+
+- [x] Shared MCP SDK v2 server factory and scoped HTTP adapter with legacy/current protocol compatibility and JSON responses.
+- [x] Gemini Connections UI: Quick/Named Cloudflare settings, per-folder access modes, URL copy, checks, local OAuth pairing, start/stop/remove and auto-start.
+- [x] OAuth discovery/DCR/PKCE, exact callback validation, bounded state, access expiry, refresh rotation/replay revocation and encrypted Named-origin persistence.
+- [x] Process supervision, grant revocation, loopback-only listener and foreground/background lifecycle with no UI credentials on the public transport.
+- [x] Typecheck, lint, public scan; full 107-test suite including real templates; all eight source Electron workflows and screenshot inspection.
+- [x] Opt-in official cloudflared test verified public HTTPS metadata, unauthenticated MCP rejection and unavailable local administration routes using an isolated empty folder.
+- [x] Separate unsigned Mac arm64 preview, actual packaged Gemini/HTTP and SDK negative acceptance, startup/recovery smoke and visual inspection.
+- [ ] Connect and exercise the custom app in the user's real Gemini account; verify a real Named Tunnel/domain and native Windows runtime separately.
+
+## Motion graphics gateway — 2026-10-14
+
+- [x] Nine implemented Video tools, engine routing, module control and MCP SDK v2 metadata.
+- [x] Saved brief, pinned HTML/GSAP starter, on-demand install and assistant-readable motion guide.
+- [x] Real lint/timeline/check/snapshot/Studio/render execution through native jobs, revision guards and scoped cancellation.
+- [x] Immutable PNG frames in MCP image blocks; bounded binary reads and encoded-output integrity checks.
+- [x] Actual HyperFrames MP4/WebM/MOV with Thai text, FFprobe validation, chunk reassembly, source/output mutation negatives and concurrent evidence reuse on this Mac.
+- [x] Adversarial self-only scheduling/sibling access, native regression, MCP image serialization and nine source Electron workflows; inspect Tools and actual frame screenshots.
+- [ ] Exercise the new catalog in the user's ChatGPT Web account after app restart/metadata refresh; native Windows video runtime acceptance remains separate.
+- [ ] Optional HTTPS video delivery via a separately authorized storage/publishing integration; current videos and Studio URLs remain local.

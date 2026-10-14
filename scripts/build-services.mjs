@@ -88,6 +88,7 @@ await build({
   entryPoints: {
     agent: "services/local-agent/src/index.ts",
     bridge: "services/mcp-bridge/src/index.ts",
+    "http-bridge": "services/mcp-bridge/src/http-entry.ts",
     "files-worker": "packages/filesystem/src/worker.ts",
     "browser-worker": "packages/browser/src/worker.ts",
     "sandbox-bootstrap": "packages/terminal/src/bootstrap.ts",
@@ -95,6 +96,7 @@ await build({
     "desktop-worker": "packages/desktop/src/worker.ts",
     "skill-worker": "packages/skills/src/worker.ts",
     "git-checkpoint-worker": "packages/git/src/checkpoint-worker.ts",
+    "video-worker": "packages/video/src/worker.ts",
   },
   bundle: true,
   platform: "node",

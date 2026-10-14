@@ -2,6 +2,15 @@ import { contextBridge, ipcRenderer } from "electron";
 import type { StudioAPI } from "../../../../packages/contracts/src/index";
 // Each method has a fixed channel. There is deliberately no generic IPC API.
 const api: StudioAPI = {
+  geminiStatus: () => ipcRenderer.invoke("studio:geminiStatus"),
+  saveGemini: (input) => ipcRenderer.invoke("studio:saveGemini", input),
+  startGemini: () => ipcRenderer.invoke("studio:startGemini"),
+  stopGemini: () => ipcRenderer.invoke("studio:stopGemini"),
+  testGemini: () => ipcRenderer.invoke("studio:testGemini"),
+  forgetGemini: () => ipcRenderer.invoke("studio:forgetGemini"),
+  selectGeminiRuntime: () => ipcRenderer.invoke("studio:selectGeminiRuntime"),
+  approveGemini: (input) => ipcRenderer.invoke("studio:approveGemini", input),
+  openGemini: () => ipcRenderer.invoke("studio:openGemini"),
   licenseStatus: () => ipcRenderer.invoke("studio:licenseStatus"),
   licenseLogin: () => ipcRenderer.invoke("studio:licenseLogin"),
   licenseActivate: (key) => ipcRenderer.invoke("studio:licenseActivate", key),

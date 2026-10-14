@@ -1,6 +1,6 @@
 # Implemented MCP tools
 
-75 registered tools. Inputs/outputs are validated with MCP SDK v2. Structured results retain `{ data }`; screenshot and image-artifact tools also return MCP image content. Every call checks current workspace/client grants, module state and ownership.
+84 registered tools. Inputs/outputs are validated with MCP SDK v2. Structured results retain `{ data }`; screenshot, video-frame and image-artifact tools also return MCP image content. Every call checks current workspace/client grants, module state and ownership.
 
 Full Access applies checkpointed writes and queues native sandbox jobs without repeated approval. Reviewed actions may await trusted local approval. There is no unrestricted command fallback. Paths are workspace-relative; artifacts are read by scoped ID.
 
@@ -12,6 +12,15 @@ Skills can also be listed/read as MCP resources. Import/update/enable/script aut
 
 | Tool | Module | Permission | Behavior |
 | --- | --- | --- | --- |
+| `video_guide` | Video | read | Read the complete authoring/execution workflow without installing runtimes. |
+| `video_project_create` | Video | write | Save the brief and pinned HyperFrames/GSAP starter with file checkpoints. |
+| `video_inspect` | Video | read | Read static root settings and source/asset revision. |
+| `video_validate` | Video | execute | Start lint, timeline or complete browser check; wait and inspect actual findings. |
+| `video_snapshot` | Video | execute | Capture 1–8 exact timestamps; status returns immutable PNG evidence and MCP images. |
+| `video_preview` | Video | execute | Start/reuse an owned loopback Studio; status checks HTTP readiness; stop via job_cancel. |
+| `video_render` | Video | execute | Encode unique MP4/WebM/MOV files after a current successful check; verify with FFprobe. |
+| `video_status` | Video | read | Actual status, findings, source freshness, frames, verified metadata and local file paths. |
+| `video_output_read` | Video | read | Bounded 512 KiB binary chunks of completed owned video; no public hosting is implied. |
 | `workspace_list` | Files | read | List authorized folders and their independent read, write, and execution grants. |
 | `workspace_info` | Files | read | Inspect one authorized workspace by ID. |
 | `file_list` | Files | read | List a directory with pagination. Protected paths are omitted; symbolic links are never followed. |

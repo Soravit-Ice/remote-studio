@@ -133,6 +133,7 @@ export class Store {
       Planning: true,
       Skills: true,
       Desktop: true,
+      Video: true,
       ...this.get<Record<string, boolean>>("modules", "main"),
     };
   }

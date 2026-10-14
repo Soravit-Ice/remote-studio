@@ -1889,12 +1889,60 @@ button.activity-table-row:hover {
 }
 
 /* ChatGPT secure tunnel: local evidence and the browser setup stay visible. */
-.tunnel-panel {
+.tunnel-panel,
+.gemini-panel {
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface);
   margin: 18px 0 28px;
   overflow: hidden;
+}
+.gemini-steps {
+  list-style: decimal;
+  color: var(--secondary);
+  font-size: 13px;
+  padding-left: 20px;
+  line-height: 1.8;
+}
+.gemini-requests {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+.gemini-request {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.gemini-request p,
+.gemini-request small {
+  color: var(--secondary);
+  font-size: 12px;
+}
+.gemini-scope {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+}
+.gemini-scope label {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+.gemini-scope small {
+  display: block;
+  word-break: break-all;
+}
+.gemini-scope select {
+  width: 190px;
+  flex-shrink: 0;
 }
 .tunnel-heading {
   display: flex;

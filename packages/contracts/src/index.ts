@@ -238,7 +238,92 @@ export interface TunnelStatus {
   error: string | null;
   logs: string;
 }
+export const publicOriginSchema = z
+  .string()
+  .trim()
+  .max(2048)
+  .transform((value, ctx) => {
+    try {
+      const url = new URL(value);
+      if (
+        url.protocol !== "https:" ||
+        url.username ||
+        url.password ||
+        url.search ||
+        url.hash ||
+        url.pathname !== "/" ||
+        url.port ||
+        !url.hostname.includes(".") ||
+        url.hostname === "localhost" ||
+        /^(?:\d+\.){3}\d+$/.test(url.hostname) ||
+        url.hostname.endsWith(".local")
+      )
+        throw new Error();
+      return url.origin;
+    } catch {
+      ctx.addIssue({
+        code: "custom",
+        message:
+          "Enter a public HTTPS origin, for example https://studio.example.com (without /mcp).",
+      });
+      return z.NEVER;
+    }
+  });
+export const geminiSettingsSchema = tunnelSettingsSchema
+  .omit({ tunnelId: true, apiKey: true })
+  .extend({
+    mode: z.enum(["quick", "named"]),
+    publicOrigin: z.union([z.literal(""), publicOriginSchema]).default(""),
+    localPort: z.number().int().min(1024).max(65535).default(8766),
+    tunnelToken: z.string().trim().min(20).max(8192).regex(/^\S+$/).optional(),
+  })
+  .strict()
+  .superRefine((settings, ctx) => {
+    if (settings.mode === "named" && !settings.publicOrigin)
+      ctx.addIssue({
+        code: "custom",
+        path: ["publicOrigin"],
+        message: "A stable HTTPS hostname is required for a named tunnel.",
+      });
+  });
+export type GeminiSettings = z.infer<typeof geminiSettingsSchema>;
+export interface GeminiAuthorization {
+  id: string;
+  clientName: string;
+  redirectUri: string;
+  pairingCode: string;
+  expiresAt: string;
+}
+export interface GeminiStatus {
+  configured: boolean;
+  secureStorage: boolean;
+  hasToken: boolean;
+  mode: "quick" | "named";
+  publicOrigin: string;
+  localPort: number;
+  workspaceIds: string[];
+  workspaceGrants?: z.infer<typeof workspaceGrantSchema>[];
+  autoStart: boolean;
+  clientId: string | null;
+  runtime: { path: string; version: string } | null;
+  phase: TunnelStatus["phase"];
+  mcpUrl: string | null;
+  bridge: TunnelStatus["bridge"];
+  publicVerifiedAt: string | null;
+  lastToolAt: string | null;
+  pending: GeminiAuthorization[];
+  error: string | null;
+}
 export interface StudioAPI {
+  geminiStatus(): Promise<GeminiStatus>;
+  saveGemini(input: GeminiSettings): Promise<GeminiStatus>;
+  startGemini(): Promise<GeminiStatus>;
+  stopGemini(): Promise<GeminiStatus>;
+  testGemini(): Promise<GeminiStatus>;
+  forgetGemini(): Promise<GeminiStatus>;
+  selectGeminiRuntime(): Promise<GeminiStatus>;
+  approveGemini(input: { id: string; allow: boolean }): Promise<GeminiStatus>;
+  openGemini(): Promise<void>;
   licenseStatus(): Promise<LicenseStatus>;
   licenseLogin(): Promise<void>;
   licenseActivate(key?: string): Promise<LicenseStatus>;

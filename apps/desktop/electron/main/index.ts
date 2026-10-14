@@ -47,15 +47,18 @@ import {
   id,
   settingsPatchSchema,
   tunnelSettingsSchema,
+  geminiSettingsSchema,
   accessModeSchema,
   workspaceGrantSchema,
   type Snapshot,
 } from "../../../../packages/contracts/src/index";
 import { proposeSchema } from "../../../../packages/filesystem/src/index";
+import { GeminiController } from "../../../../packages/gemini/src/index";
 import { TunnelController } from "../../../../packages/tunnel/src/index";
 import {
   BackgroundService,
   TunnelProxy,
+  GeminiProxy,
   serveBackground,
   backgroundCall,
 } from "./background";
@@ -102,6 +105,11 @@ const service = (name: string) => join(servicesRoot, name + ".mjs");
 let token: string;
 let events: ReturnType<typeof subscribe>;
 let tunnel: TunnelController | TunnelProxy;
+let gemini: GeminiController | GeminiProxy;
+const cloudflarePaths =
+  process.platform === "darwin"
+    ? ["/opt/homebrew/bin/cloudflared", "/usr/local/bin/cloudflared"]
+    : [];
 const lifecycle = new WorkspaceLocks();
 const background = new BackgroundService(
   data,
@@ -349,6 +357,46 @@ function makeTunnel() {
     },
   });
 }
+function makeGemini() {
+  return new GeminiController({
+    directory: data,
+    vault: {
+      available: () =>
+        safeStorage.isEncryptionAvailable() &&
+        (process.platform !== "linux" ||
+          safeStorage.getSelectedStorageBackend() !== "basic_text"),
+      encrypt: (key) => safeStorage.encryptString(key),
+      decrypt: (bytes) => safeStorage.decryptString(bytes),
+    },
+    createGrant: async (settings) =>
+      (
+        await call("connection.create", {
+          name: "Gemini Web · Cloudflare Tunnel",
+          workspaceIds: settings.workspaceIds,
+          write: settings.write,
+          execute: settings.execute,
+          accessMode: settings.accessMode,
+          workspaceGrants: settings.workspaceGrants,
+        })
+      ).clientId,
+    revokeGrant: (clientId) => call("connection.revoke", clientId),
+    checkGrant: async (clientId) => {
+      await call("connection.secret", clientId);
+    },
+    testBridge,
+    httpBridge: (clientId) => ({
+      ...entry(clientId),
+      args: [
+        service("http-bridge"),
+        "--credential",
+        join(data, "clients", clientId + ".json"),
+      ],
+    }),
+    changed: () => {
+      if (main && !main.isDestroyed()) main.webContents.send("studio:changed");
+    },
+  });
+}
 function trusted(event: Electron.IpcMainInvokeEvent) {
   if (
     event.sender !== main.webContents ||
@@ -543,6 +591,58 @@ function register() {
       return call("skills.configure", input);
     },
   );
+  handle("geminiStatus", empty, () => gemini.snapshot());
+  handle("saveGemini", geminiSettingsSchema, (input) => gemini.save(input));
+  handle("startGemini", empty, () => gemini.start());
+  handle("stopGemini", empty, () => gemini.stop());
+  handle("testGemini", empty, () => gemini.test());
+  handle("selectGeminiRuntime", empty, async () => {
+    const result = await dialog.showOpenDialog(main, {
+      title: "Choose the official cloudflared executable",
+      properties: ["openFile"],
+    });
+    return result.canceled
+      ? gemini.snapshot()
+      : gemini.selectRuntime(result.filePaths[0]);
+  });
+  handle("openGemini", empty, () =>
+    shell.openExternal("https://gemini.google.com/customize/connectors"),
+  );
+  handle(
+    "approveGemini",
+    z.object({ id, allow: z.boolean() }).strict(),
+    async (input) => {
+      if (input.allow) {
+        const pending = (await gemini.snapshot()).pending.find(
+          (p) => p.id === input.id,
+        );
+        if (!pending)
+          throw new Error(
+            "The authorization request expired. Connect again in Gemini.",
+          );
+        const result = await dialog.showMessageBox(main, {
+          buttons: ["Deny", "Allow connection"],
+          defaultId: 0,
+          cancelId: 0,
+          message: "Allow this MCP client to use the Gemini folder grants?",
+          detail: `Pairing code: ${pending.pairingCode}\nClient name (self-reported): ${pending.clientName}\nCallback: ${pending.redirectUri}\n\nMatch the code in the authorization browser page. This permits access to every folder selected in Gemini settings, using its saved access mode.`,
+        });
+        if (result.response !== 1) return gemini.snapshot();
+      }
+      return gemini.approve(input);
+    },
+  );
+  handle("forgetGemini", empty, async () => {
+    const result = await dialog.showMessageBox(main, {
+      buttons: ["Keep connection", "Remove connection"],
+      defaultId: 0,
+      cancelId: 0,
+      message: "Remove the saved Gemini connection?",
+      detail:
+        "Stops Cloudflare and the MCP adapter, invalidates OAuth sessions, revokes the local folder grants and deletes the encrypted Cloudflare token. Remove the custom app in Gemini separately.",
+    });
+    return result.response === 1 ? gemini.forget() : gemini.snapshot();
+  });
   handle("tunnelStatus", empty, () => tunnel.snapshot());
   handle("saveTunnel", tunnelSettingsSchema, (input) => tunnel.save(input));
   handle("startTunnel", empty, () => tunnel.start());
@@ -679,16 +779,24 @@ function register() {
       ) {
         if (input.backgroundService) {
           const wasLive = (await tunnel.snapshot()).live;
+          const geminiWasLive = ["running", "ready"].includes(
+            (await gemini.snapshot()).phase,
+          );
           await tunnel.stop();
+          await gemini.stop();
           try {
             await background.register();
             await background.ensure(token);
             tunnel = new TunnelProxy(data, token);
+            gemini = new GeminiProxy(data, token);
             if (wasLive) await tunnel.start();
+            if (geminiWasLive) await gemini.start();
           } catch (error) {
             await background.unregister();
             await backgroundCallForShutdown();
             tunnel = makeTunnel();
+            gemini = makeGemini();
+            await gemini.initialize(cloudflarePaths);
             await tunnel.initialize(
               process.platform === "darwin"
                 ? [
@@ -698,13 +806,17 @@ function register() {
                 : [],
             );
             if (wasLive) await tunnel.start();
+            if (geminiWasLive) await gemini.start();
             throw error;
           }
         } else {
           await tunnel.stop();
+          await gemini.stop();
           await background.unregister();
           await backgroundCallForShutdown();
           tunnel = makeTunnel();
+          gemini = makeGemini();
+          await gemini.initialize(cloudflarePaths);
           await tunnel.initialize(
             process.platform === "darwin"
               ? [
@@ -718,9 +830,8 @@ function register() {
       if (input.launchAtLogin !== undefined)
         app.setLoginItemSettings({ openAtLogin: input.launchAtLogin });
       if (input.theme) nativeTheme.themeSource = input.theme;
-      const settings = await call("settings.set", input);
-      state = { ...state, settings };
-      return settings;
+      await call("settings.set", input);
+      state = await call("snapshot");
     }),
   );
   handle(
@@ -775,6 +886,7 @@ function register() {
   handle("testConnection", id, testBridge);
   handle("revokeConnection", id, async (input) => {
     if ((await tunnel.snapshot()).clientId === input) await tunnel.stop();
+    if ((await gemini.snapshot()).clientId === input) await gemini.stop();
     return call("connection.revoke", input);
   });
   handle(
@@ -804,6 +916,8 @@ function register() {
         "developers.openai.com",
         "help.openai.com",
         "support.claude.com",
+        "support.google.com",
+        "developers.cloudflare.com",
       ].includes(parsed.hostname)
     )
       throw new Error("External destination is not allowed.");
@@ -884,8 +998,10 @@ async function quit() {
     // Never signal a cached PID after losing authenticated agent ownership.
     quitting = true;
     events?.destroy();
-    if (!state?.settings.backgroundService)
+    if (!state?.settings.backgroundService) {
       await tunnel?.stop().catch(() => {});
+      await gemini?.stop().catch(() => {});
+    }
     app.quit();
     return;
   }
@@ -906,7 +1022,10 @@ async function quit() {
       await call("job.resolve", { id: job.id, decision: "cancel" });
   }
   quitting = true;
-  if (!snapshot.settings.backgroundService) await tunnel?.stop();
+  if (!snapshot.settings.backgroundService) {
+    await tunnel?.stop();
+    await gemini?.stop();
+  }
   events?.destroy();
   try {
     if (!snapshot.settings.backgroundService)
@@ -931,7 +1050,7 @@ if (process.argv.includes("--studio-background")) {
           if (!environmentVault.locked)
             await call("environment.restore", entries);
         }
-        await serveBackground(data, token, makeTunnel());
+        await serveBackground(data, token, makeTunnel(), makeGemini());
       })
       .catch((error) => {
         writeFileSync(join(data, "background-error.log"), String(error), {
@@ -977,8 +1096,11 @@ else {
       if (state.settings.backgroundService) {
         await background.ensure(token);
         tunnel = new TunnelProxy(data, token);
+        gemini = new GeminiProxy(data, token);
       } else {
         tunnel = makeTunnel();
+        gemini = makeGemini();
+        await gemini.initialize(cloudflarePaths);
         await tunnel.initialize(
           process.platform === "darwin"
             ? [
@@ -1008,6 +1130,7 @@ else {
       register();
       openWindow();
       void tunnel.autoStart();
+      void gemini.autoStart();
       const trayImage = nativeImage.createFromDataURL(
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABhElEQVR4nM3WvU4UYRQG4GfZhRgDBZGEHjFB4zWQoPwkFlwDCcZGCddAaOzsMIEO1AuwMZBgI1wHawHxAiwIBVrMGfj4dmZhdzHxTSbzd857ft7zzTcNd0cDzbi+jONekBKnaMW7gZASj+I9vmAqs+k5UBNDcd3CCk7xB+eK9mzgUU0ytcjbsYh2EB/iCcaxlQR7l/jUtbMD8zgKkmO8qLCZwW7Y/MRqlmhH5g08xnY4neB1YjMUR57lyySZfcwmfFdoxfltGH7DcEI8UlFBK3u+Eb5f4/5Gq8qI09gZoIKDugpyLOldgzdZwpVoKqakxCs3p2ha5xStu27nAzysClKWvIzfWEuchhUTchakF4p1sInJrOpf+JBxXkVr4Bk+qx69sSDdUayHEvlIL7qDBrnTQoXNc3wKm7Zb1kGJbhp8Vwg7gY/+Vw2eYk//Ghwp2nmrBnP4oTcNVrKEK9Hta1qnQV9f0277QalBX/tBVaASo0G67R52tBQD7cm9RP5nfxUD4S9tPXHp1SQLWQAAAABJRU5ErkJggg==",
       );

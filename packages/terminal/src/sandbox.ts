@@ -220,7 +220,7 @@ export async function spawnSandbox(
   args: string[],
   cwd: string,
   extraEnvironment: Record<string, string> = {},
-  variant: "command" | "browser" | "desktop" = "command",
+  variant: "command" | "browser" | "desktop" | "video" = "command",
   desktopBundleId?: string,
 ): Promise<ChildProcess> {
   if (!sandboxStatus().available) throw new Error(sandboxStatus().reason);
@@ -341,7 +341,7 @@ export async function spawnSandbox(
       .map((_path, i) => `(path-ancestors (param "SEALED_${i}"))`)
       .join(" ");
     const browser =
-      variant === "browser" || variant === "desktop"
+      variant === "browser" || variant === "desktop" || variant === "video"
         ? `
 (allow mach-lookup (global-name "com.apple.coreservices.launchservicesd") (global-name "com.apple.CoreServices.coreservicesd") (global-name "com.apple.windowserver.active") (global-name "com.apple.distributed_notifications@Uv3") (global-name "com.apple.SystemConfiguration.configd") (global-name "com.apple.SystemConfiguration.DNSConfiguration") (global-name "com.apple.FontObjectsServer"))
 (allow mach-register mach-lookup (global-name-regex #"^(org\\.chromium\\.(Chromium|Electron)|com\\.github\\.Electron)\\.MachPortRendezvousServer\\.[0-9]+$"))
@@ -362,6 +362,9 @@ export async function spawnSandbox(
     const profile =
       base +
       browser +
+      (variant === "video"
+        ? '\n(allow system-sched (target self))\n(allow sysctl-read (sysctl-name "kern.boottime"))\n'
+        : "") +
       desktopRendezvous +
       "\n" +
       defaults +

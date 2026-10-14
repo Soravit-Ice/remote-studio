@@ -28,17 +28,19 @@ The packaged application uses its bundled Electron/Node runtime for the agent an
 
 - Six desktop destinations, native directory selection, multiple persisted folders, independent read/write/execute grants, groups and names, light/dark/system themes, and first-run onboarding.
 - Authenticated local Unix socket / Windows named-pipe agent. Separate UI credentials and revocable per-client credentials with explicit folder scopes.
-- Official MCP SDK v2 stdio bridge, with validated input and output schemas and 75 implemented tools. See [docs/TOOLS.md](docs/TOOLS.md).
+- Official MCP SDK v2 stdio bridge, with validated input and output schemas and 84 implemented tools. See [docs/TOOLS.md](docs/TOOLS.md).
 - File/folder operations, batch edits, binary assets and safe checkpoints/Undo, with Reviewed and immediate Full Access modes.
 - Persistent SQLite command jobs, Reviewed or explicitly authorized Full Access execution inside the native sandbox, real stdout/stderr, exit codes, timeouts, bounded output, cancellation, process-group cleanup, idempotency, and interrupted-job recovery without replay.
 - React/Vite, Astro/React, Next, local full-stack and Electron starters; bounded source intelligence, monorepo context and TS aliases. Tauri is an experimental scaffold.
 - Git init/stage/commit/branch plus status/diff/log. Managed dev-server jobs and scoped Playwright page inspection, interaction and screenshots. Module enable/disable and a full local audit history.
 - Scoped local connection configuration, configuration backup/merge for Claude Desktop and Cursor, copyable JSON/TOML, real MCP diagnostic handshake and tool-list checks.
+- Gemini Web setup with a scoped MCP SDK v2 Streamable HTTP adapter, Cloudflare Quick/Named Tunnels, OAuth discovery/Dynamic Client Registration/PKCE, and explicit local pairing approval. Named-origin OAuth sessions use OS encrypted storage. See [the Thai Gemini setup guide](docs/GEMINI-SETUP-TH.md).
 - Close-to-tray behavior, native notifications, remembered window bounds, and explicit Quit semantics.
 - Renderer crash recovery, a startup fallback and React error screen, bounded native startup diagnostics, disconnected-agent status and safe service reconnection without replaying work.
 
 - Persistent plans, verification gates, explicit resume and task-bound image/diagnostic evidence.
 - Scoped Skills, OS-backed project environment, safe Git checkpoints, Activity pagination and opt-in background helper.
+- HyperFrames motion graphics: saved briefs, pinned HTML/GSAP starters, browser checks, frames visible in ChatGPT, managed Studio previews and verified MP4/WebM/MOV files. See [the Thai motion workflow guide](docs/MOTION-GRAPHICS-TH.md). Video files are local outputs; public video hosting requires a separate integration.
 
 ## Important behavior
 

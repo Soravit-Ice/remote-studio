@@ -167,17 +167,19 @@ export async function inspectProject(
   return {
     name: String(pkg.name ?? "Unnamed project"),
     scripts: pkg.scripts ?? {},
-    framework: dependencies.electron
-      ? "Electron"
-      : dependencies["@tauri-apps/api"]
-        ? "Tauri"
-        : dependencies.next
-          ? "Next.js"
-          : dependencies.astro
-            ? "Astro"
-            : dependencies.react
-              ? "React"
-              : "Node.js",
+    framework: dependencies.hyperframes
+      ? "HyperFrames"
+      : dependencies.electron
+        ? "Electron"
+        : dependencies["@tauri-apps/api"]
+          ? "Tauri"
+          : dependencies.next
+            ? "Next.js"
+            : dependencies.astro
+              ? "Astro"
+              : dependencies.react
+                ? "React"
+                : "Node.js",
     packageManager: declared ?? lockManagers[0] ?? "npm",
     dependencies,
     packageManagerDeclaration: pkg.packageManager ?? null,

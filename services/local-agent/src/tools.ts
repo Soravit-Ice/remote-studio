@@ -11,6 +11,7 @@ import {
   locatorSchema,
 } from "../../../packages/contracts/src/index";
 import { developmentCatalog, artifactSchema } from "./development-tools";
+import { videoCatalog } from "./video-tools";
 const scope = z.object({ workspaceId: id, path: relativePath });
 const change = z.object({
   id,
@@ -70,6 +71,7 @@ function tool(
   return { name, module, permission, description, input, output };
 }
 export const catalog = [
+  ...videoCatalog,
   tool(
     "workspace_list",
     "Files",

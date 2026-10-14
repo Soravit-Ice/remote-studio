@@ -68,6 +68,7 @@ import {
   SkillsPanel,
 } from "../features/development/DevelopmentPanel";
 import { ChatGPTConnection } from "../components/ChatGPTConnection";
+import { GeminiConnection } from "../components/GeminiConnection";
 import { time } from "../lib/utils";
 import { useUI, type Page } from "../lib/store";
 declare global {
@@ -150,7 +151,8 @@ const moduleDescriptions: Record<string, string> = {
   Git: "Inspect status, diffs, and commit history.",
   Jobs: "Durable jobs with cancellation and logs.",
   System: "Local runtime and permission diagnostics.",
-  Video: "FFmpeg processing and transcription.",
+  Video:
+    "HyperFrames motion graphics, frame previews and verified video renders.",
   Browser: "Isolated browser automation with Playwright.",
   Documents: "PDF, spreadsheets, and document processing.",
 };
@@ -1339,6 +1341,7 @@ function Connections({ data, perform }: { data: Snapshot; perform: Perform }) {
         </div>
       </div>
       <ChatGPTConnection data={data} />
+      <GeminiConnection data={data} />
       <SectionTitle
         title="Choose your assistant"
         detail="Local stdio connections"

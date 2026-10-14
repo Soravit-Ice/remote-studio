@@ -60,6 +60,7 @@ import { Desktops } from "../../../packages/desktop/src/index";
 import { Skills } from "../../../packages/skills/src/index";
 import { Environment } from "../../../packages/environment/src/index";
 import { Design } from "../../../packages/design/src/index";
+import { Videos } from "../../../packages/video/src/index";
 const runFile = promisify(execFile);
 const uiActor: Actor = {
   id: "local-ui",
@@ -80,6 +81,7 @@ export class Engine {
   readonly skills: Skills;
   readonly environment: Environment;
   readonly design: Design;
+  readonly videos: Videos;
   readonly locks = new WorkspaceLocks();
   readonly serverId: string;
   readonly startedAt = new Date().toISOString();
@@ -102,6 +104,12 @@ export class Engine {
     );
     this.developer = new DeveloperTools(this.security, this.jobs);
     this.artifacts = new Artifacts(this.security);
+    this.videos = new Videos(
+      this.security,
+      this.files,
+      this.jobs,
+      this.artifacts,
+    );
     this.desktops = new Desktops(this.security, this.artifacts, this.jobs);
     this.skills = new Skills(this.security, this.files, this.jobs, changed);
     this.browsers = new Browsers(
@@ -771,6 +779,7 @@ export class Engine {
               "Planning",
               "Skills",
               "Desktop",
+              "Video",
             ]),
             enabled: z.boolean(),
           })
@@ -1086,6 +1095,24 @@ export class Engine {
           throw new Error("Artifact belongs to another workspace.");
         return this.artifacts.read(a.id, actor);
       }
+      case "video_guide":
+        return this.videos.guide();
+      case "video_project_create":
+        return this.videos.create(input, actor);
+      case "video_inspect":
+        return this.videos.inspect(input, actor);
+      case "video_validate":
+        return this.videos.start(input, input.mode, actor);
+      case "video_snapshot":
+        return this.videos.start(input, "snapshot", actor);
+      case "video_preview":
+        return this.videos.start(input, "preview", actor);
+      case "video_render":
+        return this.videos.start(input, "render", actor);
+      case "video_status":
+        return this.videos.status(input, actor);
+      case "video_output_read":
+        return this.videos.outputRead(input, actor);
       case "browser_check":
         return this.browsers.check(input, actor);
       case "browser_compare":

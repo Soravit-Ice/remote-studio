@@ -294,6 +294,7 @@ export class Jobs {
           job.command.args,
           cwd,
           { ...environment, ...extra },
+          job.originModule === "Video" ? "video" : "command",
         );
         this.active.set(job.id, child);
         job.pid = child.pid ?? null;
