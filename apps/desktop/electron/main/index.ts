@@ -1,3 +1,4 @@
+import { studioVersion } from "../../../../packages/shared/src/version";
 import {
   frozenUI,
   frozenServices,
@@ -171,7 +172,7 @@ async function testBridge(clientId: string) {
   const config = entry(clientId);
   const client = new Client({
     name: "remote-studio-diagnostics",
-    version: "0.1.0",
+    version: studioVersion,
   });
   try {
     await client.connect(

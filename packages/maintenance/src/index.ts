@@ -1,3 +1,4 @@
+import { studioVersion } from "../../shared/src/version";
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
 import type { Store } from "../../database/src/index";
@@ -17,7 +18,7 @@ export class Maintenance {
     return {
       format: 1,
       capturedAt: new Date().toISOString(),
-      version: "0.1.0",
+      version: studioVersion,
       platform: process.platform,
       arch: process.arch,
       node: process.versions.node,

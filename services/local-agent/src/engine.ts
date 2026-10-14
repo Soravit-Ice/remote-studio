@@ -1,3 +1,4 @@
+import { studioVersion } from "../../../packages/shared/src/version";
 import { Maintenance } from "../../../packages/maintenance/src/index";
 import {
   Licensing,
@@ -179,7 +180,7 @@ export class Engine {
   }
   snapshot(): Snapshot {
     return {
-      version: "0.1.0",
+      version: studioVersion,
       agent: {
         status: "running",
         pid: process.pid,
@@ -1345,7 +1346,7 @@ export class Engine {
           platform: process.platform,
           arch: process.arch,
           node: process.versions.node,
-          agentVersion: "0.1.0",
+          agentVersion: studioVersion,
           memoryBytes: process.memoryUsage().rss,
           serverId: this.serverId,
           catalogFingerprint: hash(

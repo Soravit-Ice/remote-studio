@@ -33,6 +33,9 @@ test("real SDK initializes encrypted storage and unactivated source/package bloc
     await expect(
       page.getByText("Activation required", { exact: true }),
     ).toBeVisible();
+    const snapshot = await page.evaluate(() => window.studio.snapshot());
+    const packageVersion = await app.evaluate(({ app }) => app.getVersion());
+    expect(snapshot.version).toBe(packageVersion);
     const status = await page.evaluate(() => window.studio.licenseStatus());
     expect(status).toMatchObject({
       configured: true,

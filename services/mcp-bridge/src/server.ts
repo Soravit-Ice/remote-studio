@@ -1,3 +1,4 @@
+import { studioVersion } from "../../../packages/shared/src/version";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import { rpc } from "../../../packages/shared/src/rpc";
 import { catalog } from "../../local-agent/src/tools";
@@ -43,7 +44,7 @@ export async function createBridge(
 
   const server = new McpServer({
     name,
-    version: "0.1.0",
+    version: studioVersion,
     title: `Remote Studio · ${identity.serverId}`,
   });
   server.registerResource(

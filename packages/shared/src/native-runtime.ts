@@ -1,3 +1,4 @@
+import { studioVersion } from "./version";
 import {
   cpSync,
   mkdirSync,
@@ -143,7 +144,7 @@ export function frozenUI(source: string, ownerRoot: string) {
     join(target, "package.json"),
     JSON.stringify({
       name: "remotestudio",
-      version: "0.1.0",
+      version: studioVersion,
       type: "module",
       main: "main/index.js",
     }),
