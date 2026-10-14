@@ -1,6 +1,6 @@
 {
   "name": "remotestudio",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "type": "module",
   "description": "Local-first MCP desktop execution studio",
@@ -125,7 +125,8 @@
       "category": "public.app-category.developer-tools",
       "hardenedRuntime": true,
       "entitlements": "resources/entitlements.mac.plist",
-      "notarize": true
+      "notarize": true,
+      "minimumSystemVersion": "13.0.0"
     },
     "win": {
       "target": [

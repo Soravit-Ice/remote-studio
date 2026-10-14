@@ -51,6 +51,7 @@ if (process.platform === "darwin")
     "/usr/bin/clang++",
     [
       "-std=c++17",
+      "-mmacosx-version-min=13.0",
       "-O2",
       "-arch",
       "arm64",
@@ -68,6 +69,7 @@ if (process.platform === "darwin")
     "/usr/bin/clang++",
     [
       "-std=c++17",
+      "-mmacosx-version-min=13.0",
       "-O2",
       "-dynamiclib",
       "-undefined",
