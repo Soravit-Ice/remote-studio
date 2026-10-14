@@ -1,0 +1,48 @@
+{
+  "version": "0.2.2",
+  "tag": "v0.2.2",
+  "sourceCommit": "20a785b6464b789f7afa4e7ed20968fee2af6961",
+  "runId": 38624883300,
+  "runUrl": "https://github.com/Soravit-Ice/remote-studio/actions/runs/38624883300",
+  "conclusion": "success",
+  "storeStatus": "PUBLISHED",
+  "productStatus": "PUBLISHED",
+  "targets": [
+    "MACOS/ARM64"
+  ],
+  "downloads": [
+    {
+      "product": "RS",
+      "version": "0.2.2",
+      "platform": "MACOS",
+      "architecture": "ARM64",
+      "fileName": "remote-studio-0.2.2-mac-arm64.dmg",
+      "fileSize": 152188555,
+      "sha256": "f464b515a4b5817c82c2125cb347b2ab92c3adccd7bd329f09475b6e8a65fafd",
+      "codeSigned": false,
+      "notarized": false,
+      "storefront": "https://store.t2etech.com/products/remote-studio",
+      "publicInstallerAPI": "passed",
+      "actualDownloadChecksum": "passed"
+    }
+  ],
+  "publisherLicenseAcceptance": {
+    "product": "RS",
+    "version": "0.2.2",
+    "packaged": true,
+    "realProductionKeyActivation": true,
+    "anotherProductRejected": true,
+    "protectedWork": true,
+    "restartPersistence": true,
+    "deactivation": true,
+    "oauthLoginTested": false,
+    "purchaseTested": false,
+    "platform": "darwin",
+    "architecture": "arm64"
+  },
+  "limits": [
+    "Unsigned manual installation and updates",
+    "Mac Intel and Windows are not included",
+    "No real OAuth sign-in, customer payment, physical reboot or macOS 13 hardware acceptance was performed"
+  ]
+}

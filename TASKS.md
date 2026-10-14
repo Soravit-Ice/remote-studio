@@ -143,3 +143,13 @@ Personal project acceptance comes before commercial certification. No GitHub pus
 - [x] Adversarial self-only scheduling/sibling access, native regression, MCP image serialization and nine source Electron workflows; inspect Tools and actual frame screenshots.
 - [ ] Exercise the new catalog in the user's ChatGPT Web account after app restart/metadata refresh; native Windows video runtime acceptance remains separate.
 - [ ] Optional HTTPS video delivery via a separately authorized storage/publishing integration; current videos and Studio URLs remain local.
+
+## Production release 0.2.2 — 2026-10-15
+
+- [x] Native Apple Silicon source/build/packaged gates, explicit helper deployment target and consistent app/MCP/support versions.
+- [x] Scoped CI upload configuration, connected installer repository, saved SDK/source bindings and unchanged 499 THB one-time Stripe mapping.
+- [x] Production publisher-key activation, another-product rejection, protected work, restart and deactivation; temporary grants revoked.
+- [x] Immutable installer, Store READY/VERIFIED, deliberate release/product publication and full public-download SHA-256 verification.
+- [ ] Fix and verify Mac Intel sandbox runtime access and Windows native ACL setup before adding those release targets.
+- [ ] Actual browser OAuth account callback, Gemini account integration, customer payment and physical reboot/login checks.
+- [ ] Actual signing/notarization credentials and publisher pins for automatic installer updates.

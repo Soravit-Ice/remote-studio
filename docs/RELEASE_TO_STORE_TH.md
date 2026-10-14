@@ -1,5 +1,7 @@
 # Remote Studio: source → repo installer → Store
 
+สถานะ 15 ตุลาคม 2026: **0.2.2 PUBLISHED** ทั้ง immutable installer และ production Store สำหรับ **Mac Apple Silicon ARM64** เท่านั้น CI [38624883300](https://github.com/Soravit-Ice/remote-studio/actions/runs/38624883300) ผ่านและตรวจ SHA-256 ของดาวน์โหลดจริงแล้ว ราคาเดิม 499 บาทซื้อครั้งเดียวเชื่อม Stripe แล้ว ตัวติดตั้งยัง unsigned และอัปเดตด้วยมือ ส่วน Intel/Windows ยังไม่รวมเพราะ native sandbox acceptance ไม่ผ่าน ดู `production-release-0.2.2.json` สำหรับขอบเขตหลักฐาน เนื้อหาด้านล่างมีประวัติการตั้งค่าเดิมที่ดำเนินการเสร็จแล้วบางส่วน.
+
 ใช้โครงสร้างเดียวกับ Precut โดยแยก repo source ออกจาก repo installer:
 
 | หน้าที่                               | Repository                           | Numeric ID   |
