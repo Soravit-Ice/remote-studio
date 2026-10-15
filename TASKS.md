@@ -160,4 +160,4 @@ Personal project acceptance comes before commercial certification. No GitHub pus
 - [x] Gate assistant connections and all MCP data access on paid activation, including existing credentials.
 - [x] Replace native and renderer branding using the supplied original icon.
 - [x] Pass all 9 source Electron scenarios, including unpaid bridge rejection.
-- [ ] Complete full service tests, packaged acceptance, native release CI and Store publication.
+- [x] Complete full service tests, packaged acceptance, native release CI and Store publication.
