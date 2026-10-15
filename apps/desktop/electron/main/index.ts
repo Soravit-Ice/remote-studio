@@ -82,6 +82,9 @@ if (explicitData >= 0 && process.argv[explicitData + 1])
   app.setPath("userData", process.argv[explicitData + 1]);
 if (process.env.STUDIO_DATA_DIR)
   app.setPath("userData", process.env.STUDIO_DATA_DIR);
+const appIconPath = app.isPackaged
+  ? join(process.resourcesPath, "icon.png")
+  : resolve(import.meta.dirname, "../../resources/icon.png");
 let main: BrowserWindow;
 let tray: Tray;
 let quitting = false;
@@ -448,9 +451,9 @@ function register() {
       defaultId: 0,
       cancelId: 0,
     });
-    return answer.response === 1
-      ? call("license.deactivate")
-      : call("license.status");
+    if (answer.response !== 1) return call("license.status");
+    await Promise.all([tunnel.stop(), gemini.stop()]);
+    return call("license.deactivate");
   });
   handle("licenseOpenStore", empty, () =>
     shell.openExternal(
@@ -948,6 +951,7 @@ function openWindow() {
     minWidth: 940,
     minHeight: 640,
     title: "Remote Studio",
+    icon: appIconPath,
     backgroundColor: "#fafafa",
     show: false,
     titleBarStyle: process.platform === "darwin" ? "hiddenInset" : "default",
@@ -1129,15 +1133,14 @@ else {
         return net.fetch(pathToFileURL(file).href);
       });
       register();
+      app.dock?.setIcon(appIconPath);
       openWindow();
       void tunnel.autoStart();
       void gemini.autoStart();
-      const trayImage = nativeImage.createFromDataURL(
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABgAAAAYCAYAAADgdz34AAABhElEQVR4nM3WvU4UYRQG4GfZhRgDBZGEHjFB4zWQoPwkFlwDCcZGCddAaOzsMIEO1AuwMZBgI1wHawHxAiwIBVrMGfj4dmZhdzHxTSbzd857ft7zzTcNd0cDzbi+jONekBKnaMW7gZASj+I9vmAqs+k5UBNDcd3CCk7xB+eK9mzgUU0ytcjbsYh2EB/iCcaxlQR7l/jUtbMD8zgKkmO8qLCZwW7Y/MRqlmhH5g08xnY4neB1YjMUR57lyySZfcwmfFdoxfltGH7DcEI8UlFBK3u+Eb5f4/5Gq8qI09gZoIKDugpyLOldgzdZwpVoKqakxCs3p2ha5xStu27nAzysClKWvIzfWEuchhUTchakF4p1sInJrOpf+JBxXkVr4Bk+qx69sSDdUayHEvlIL7qDBrnTQoXNc3wKm7Zb1kGJbhp8Vwg7gY/+Vw2eYk//Ghwp2nmrBnP4oTcNVrKEK9Hta1qnQV9f0277QalBX/tBVaASo0G67R52tBQD7cm9RP5nfxUD4S9tPXHp1SQLWQAAAABJRU5ErkJggg==",
-      );
-      trayImage.setTemplateImage(process.platform === "darwin");
+      const trayImage = nativeImage
+        .createFromPath(appIconPath)
+        .resize({ width: 22, height: 22 });
       tray = new Tray(trayImage);
-      tray.setTitle(process.platform === "darwin" ? "◈" : "");
       tray.setToolTip("Remote Studio · Local agent running");
       tray.setContextMenu(
         Menu.buildFromTemplate([

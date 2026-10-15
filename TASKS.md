@@ -153,3 +153,11 @@ Personal project acceptance comes before commercial certification. No GitHub pus
 - [ ] Fix and verify Mac Intel sandbox runtime access and Windows native ACL setup before adding those release targets.
 - [ ] Actual browser OAuth account callback, Gemini account integration, customer payment and physical reboot/login checks.
 - [ ] Actual signing/notarization credentials and publisher pins for automatic installer updates.
+
+## 0.2.3 production update — 2026-10-16
+
+- [x] Audit unauthenticated/unalicensed connection behavior in 0.2.2.
+- [x] Gate assistant connections and all MCP data access on paid activation, including existing credentials.
+- [x] Replace native and renderer branding using the supplied original icon.
+- [x] Pass all 9 source Electron scenarios, including unpaid bridge rejection.
+- [ ] Complete full service tests, packaged acceptance, native release CI and Store publication.

@@ -50,7 +50,7 @@ export function LicensePanel() {
             <p>
               {data?.valid
                 ? "File changes and commands are enabled within your workspace permissions."
-                : "Workspace browsing, setup, recovery and stopping work remain available. Activate to make file changes and run commands."}
+                : "Local workspace browsing, setup, recovery and stopping work remain available. Activate your purchase or license key before connecting assistants, sharing files through MCP, making changes or running commands."}
             </p>
             <p>
               {data?.signedIn ? "Account connected" : "Not signed in"} ·{" "}

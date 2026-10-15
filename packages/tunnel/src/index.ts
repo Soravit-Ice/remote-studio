@@ -586,6 +586,18 @@ export class TunnelController {
     if (!child || !runDirectory || this.probing) return;
     this.probing = true;
     try {
+      try {
+        if (!this.saved)
+          throw new Error("Connection configuration is unavailable.");
+        await this.deps.checkGrant(this.saved.clientId);
+      } catch (error) {
+        if (this.child !== child) return;
+        await this.stopInternal();
+        this.phase = "error";
+        this.error = redact((error as Error).message);
+        return;
+      }
+      if (this.child !== child) return;
       const base = healthBase(
         await readFile(join(runDirectory, "health.url"), "utf8"),
       );

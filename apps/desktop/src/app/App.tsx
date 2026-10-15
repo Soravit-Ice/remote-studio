@@ -1,3 +1,4 @@
+import appIcon from "../assets/remote-studio-icon.png";
 import { LicensePanel } from "../features/licensing/LicensePanel";
 import { useEffect, useState, type ReactNode } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -348,7 +349,7 @@ export function App() {
         <div className="mac-drag-space" />
         <div className="brand">
           <div className="brand-mark">
-            <Layers3 size={21} />
+            <img src={appIcon} alt="Remote Studio" width={34} height={34} />
           </div>
           <div>
             Remote Studio<span>LOCAL WORKSPACE ENGINE</span>
@@ -434,6 +435,18 @@ export function App() {
           </div>
         </header>
         <main className="content">
+          {!data.license?.valid && (
+            <div className="connection-warning" role="status">
+              <span>
+                <strong>Activation required to connect assistants.</strong> The
+                local agent is running. MCP access is locked until you activate
+                your purchase or license key.
+              </span>
+              <Button variant="secondary" onClick={() => navigate("Settings")}>
+                Open License settings
+              </Button>
+            </div>
+          )}
           {query.isError && (
             <div className="connection-warning" role="alert">
               <span>
@@ -552,9 +565,11 @@ function Home({
       <Heading
         eyebrow="YOUR LOCAL CONTROL CENTER"
         title={
-          workspaces.length
-            ? "Your workspace is ready."
-            : "Your computer, connected."
+          !data.license?.valid
+            ? "Activate to connect your assistant."
+            : workspaces.length
+              ? "Your workspace is ready."
+              : "Your computer, connected."
         }
         description="A secure bridge between your AI assistant and the work on your computer."
       />
@@ -1359,6 +1374,7 @@ function Connections({ data, perform }: { data: Snapshot; perform: Perform }) {
               <Button
                 variant="secondary"
                 size="sm"
+                disabled={!data.license?.valid}
                 onClick={() => {
                   setKind(c.name);
                   setScope(
@@ -1370,7 +1386,7 @@ function Connections({ data, perform }: { data: Snapshot; perform: Perform }) {
                   setCreating(true);
                 }}
               >
-                Set up
+                {data.license?.valid ? "Set up" : "Activation required"}
                 <ArrowRight size={14} />
               </Button>
               <button
@@ -2697,7 +2713,7 @@ function SettingsPage({ data, perform }: { data: Snapshot; perform: Perform }) {
               </p>
             </div>
             <span className="about-logo">
-              <Layers3 size={25} />
+              <img src={appIcon} alt="Remote Studio" width={45} height={45} />
             </span>
           </div>
         </div>
@@ -2729,7 +2745,7 @@ function Onboarding({ data, perform }: { data: Snapshot; perform: Perform }) {
       <div className="onboarding-body">
         <span className="onboarding-mark">
           {step === 0 ? (
-            <Layers3 size={33} />
+            <img src={appIcon} alt="Remote Studio" width={48} height={48} />
           ) : step === 1 ? (
             <FolderOpen size={33} />
           ) : step === 2 ? (

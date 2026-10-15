@@ -101,8 +101,9 @@ export class Licensing implements LicenseAuthority {
         ...this.cached,
         configured: true,
         reason:
-          "Sign in and activate Remote Studio to enable file changes and commands.",
+          "Sign in and activate your purchase, or activate a license key, to connect assistants and run protected work.",
       };
+      await this.status();
       this.changed();
       return this.cached;
     });

@@ -24,9 +24,10 @@ try {
     page.getByRole("button", { name: "Set up later", exact: true }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Set up later", exact: true }).click();
-  await expect(
-    page.getByRole("heading", { name: "Your computer, connected." }),
-  ).toBeVisible();
+  const homeTitle = executablePath
+    ? "Activate to connect your assistant."
+    : "Your computer, connected.";
+  await expect(page.getByRole("heading", { name: homeTitle })).toBeVisible();
   const snapshot = await page.evaluate(() => window.studio.snapshot());
   agentPid = snapshot.agent.pid;
   if (
@@ -56,7 +57,7 @@ try {
           }),
         { timeout: 15000 },
       )
-      .toContain("Your computer, connected.")
+      .toContain(homeTitle)
       .catch(async (error) => {
         console.error(
           await readFile(join(root, "desktop.log"), "utf8").catch(

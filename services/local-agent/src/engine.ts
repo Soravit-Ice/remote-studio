@@ -1,3 +1,4 @@
+import { stoppingTools } from "../../../packages/shared/src/stop-tools";
 import { studioVersion } from "../../../packages/shared/src/version";
 import { Maintenance } from "../../../packages/maintenance/src/index";
 import {
@@ -218,6 +219,20 @@ export class Engine {
     };
   }
   async request(method: string, raw: unknown, actor: Actor): Promise<any> {
+    // Existing credentials and already-open bridges must not retain read access
+    // after expiry or deactivation. Local setup and stopping work remain available.
+    if (
+      !actor.ui &&
+      [
+        "server.identity",
+        "tool.list",
+        "skill.resources",
+        "artifact.content",
+        "client.seen",
+      ].includes(method)
+    ) {
+      await this.licensing.ensure();
+    }
     if (method === "server.identity") {
       if (
         !actor.ui &&
@@ -288,6 +303,8 @@ export class Engine {
       const call = z
         .object({ name: z.string(), arguments: z.unknown() })
         .parse(raw);
+      if (!actor.ui && !stoppingTools.has(call.name))
+        await this.licensing.ensure();
       const tool = this.available(actor).find((t) => t.name === call.name);
       if (!tool) throw new Error("Tool is disabled or unavailable.");
       const input = tool.input.parse(call.arguments) as any;
@@ -323,13 +340,7 @@ export class Engine {
         }
         const execute = async () => {
           const protectedWork =
-            tool.permission !== "read" &&
-            ![
-              "job_cancel",
-              "preview_stop",
-              "browser_close",
-              "desktop_stop",
-            ].includes(tool.name);
+            tool.permission !== "read" && !stoppingTools.has(tool.name);
           if (protectedWork) await this.licensing.ensure();
           if (!tool.name.startsWith("plan_") && !tool.name.startsWith("task_"))
             context = await this.planning.before(
@@ -934,6 +945,7 @@ export class Engine {
         });
       }
       case "connection.create": {
+        await this.licensing.ensure();
         const input = z
           .object({
             name: z.string().min(1).max(80),
@@ -1019,6 +1031,7 @@ export class Engine {
         });
       }
       case "connection.secret": {
+        await this.licensing.ensure();
         const clientId = id.parse(raw);
         if (!this.store.clients().some((c) => c.id === clientId && !c.revoked))
           throw new Error("Connection has been revoked.");

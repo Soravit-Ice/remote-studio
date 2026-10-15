@@ -1,5 +1,5 @@
-import { expect, it } from "vitest";
-import { mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
+import { expect, it, vi } from "vitest";
+import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -7,6 +7,7 @@ import {
   createHash,
   generateKeyPairSync,
   randomBytes,
+  randomUUID,
   sign,
 } from "node:crypto";
 import { NodeEncryptedFileStorage } from "@t2e/license-sdk/node";
@@ -207,13 +208,39 @@ it("rejects absent, expired, wrong-product and missing-feature licenses before s
         ui,
       ),
     ).rejects.toThrow(/licens/i);
-    const { clientId } = await engine.request(
-      "connection.create",
-      { name: "fixture", workspaceIds: [ws.id], write: true },
-      ui,
+    await expect(
+      engine.request(
+        "connection.create",
+        {
+          name: "unlicensed",
+          workspaceIds: [ws.id],
+          write: true,
+        },
+        ui,
+      ),
+    ).rejects.toThrow(/licens/i);
+    expect(engine.store.clients()).toHaveLength(0);
+    // Credentials persisted by 0.2.2 must not bypass the new activation gate.
+    const clientId = randomUUID(),
+      token = randomBytes(32).toString("hex");
+    engine.store.put("client", clientId, {
+      id: clientId,
+      name: "legacy",
+      workspaceIds: [ws.id],
+      write: true,
+      revoked: false,
+      lastSeen: null,
+      tokenHash: createHash("sha256").update(token).digest("hex"),
+    });
+    await mkdir(join(root, "data", "clients"));
+    await writeFile(
+      join(root, "data", "clients", clientId + ".json"),
+      JSON.stringify({ id: clientId, token, directory: join(root, "data") }),
     );
-    const credential = await engine.request("connection.secret", clientId, ui),
-      actor = engine.actor(credential.token, "client");
+    await expect(
+      engine.request("connection.secret", clientId, ui),
+    ).rejects.toThrow(/licens/i);
+    const actor = engine.actor(token, "client");
     await expect(
       engine.request(
         "license.initialize",
@@ -237,13 +264,41 @@ it("rejects absent, expired, wrong-product and missing-feature licenses before s
     ).rejects.toThrow(/licens/i);
     expect(engine.store.jobs()).toHaveLength(0);
     expect(engine.store.changes()).toHaveLength(0);
+    for (const method of [
+      "server.identity",
+      "tool.list",
+      "skill.resources",
+      "artifact.content",
+      "client.seen",
+    ])
+      await expect(engine.request(method, {}, actor)).rejects.toThrow(
+        /licens/i,
+      );
+    for (const name of [
+      "file_list",
+      "file_read",
+      "file_search",
+      "workspace_list",
+      "skill_list",
+    ])
+      await expect(
+        engine.request(
+          "tool.call",
+          {
+            name,
+            arguments: { workspaceId: ws.id, path: "secret.txt" },
+          },
+          actor,
+        ),
+      ).rejects.toThrow(/licens/i);
     expect(
-      await engine.request(
-        "tool.call",
-        { name: "file_list", arguments: { workspaceId: ws.id } },
-        actor,
-      ),
-    ).toMatchObject({ total: 0 });
+      await engine
+        .request("file.read", { workspaceId: ws.id, path: "local.txt" }, ui)
+        .catch(() => null),
+    ).toBeNull();
+    expect(await engine.request("jobs.stopAll", {}, ui)).toMatchObject({
+      jobs: 0,
+    });
   } finally {
     await engine.close();
     await rm(root, { recursive: true, force: true });
@@ -274,6 +329,77 @@ it("preserves corrupt encrypted storage and creates PKCE requests bound to the r
     await wrong.dispose();
     expect(await readFile(join(f.data, "license-sdk.enc"))).toEqual(before);
   } finally {
+    await f.cleanup();
+  }
+});
+
+it("rechecks signed paid access on existing MCP clients after expiry and restores it without requiring account login", async () => {
+  const f = await paidFixture();
+  const engine = new Engine(f.data, "a".repeat(64), () => {}, f.authority);
+  try {
+    // A paid key is sufficient; account sign-in is an alternative activation path.
+    expect(await f.authority.status(false)).toMatchObject({
+      valid: true,
+      signedIn: false,
+    });
+    const folder = join(f.root, "project");
+    await mkdir(folder);
+    await writeFile(join(folder, "private.txt"), "private workspace content");
+    const [ws] = await engine.request("workspace.add", { paths: [folder] }, ui);
+    const { clientId } = await engine.request(
+      "connection.create",
+      { name: "paid", workspaceIds: [ws.id], write: false },
+      ui,
+    );
+    const { token } = await engine.request("connection.secret", clientId, ui);
+    const actor = engine.actor(token, "client");
+    const call = () =>
+      engine.request(
+        "tool.call",
+        {
+          name: "file_read",
+          arguments: { workspaceId: ws.id, path: "private.txt" },
+        },
+        actor,
+      );
+    expect(await call()).toMatchObject({
+      content: "private workspace content",
+    });
+    expect(await engine.request("tool.list", {}, actor)).not.toHaveLength(0);
+    const now = Date.now();
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(now + 600000);
+    await expect(call()).rejects.toThrow(/license/i);
+    for (const method of [
+      "server.identity",
+      "tool.list",
+      "skill.resources",
+      "artifact.content",
+      "client.seen",
+    ])
+      await expect(engine.request(method, {}, actor)).rejects.toThrow(
+        /license/i,
+      );
+    await expect(
+      engine.request("connection.secret", clientId, ui),
+    ).rejects.toThrow(/license/i);
+    expect(
+      await engine.request(
+        "file.read",
+        { workspaceId: ws.id, path: "private.txt" },
+        ui,
+      ),
+    ).toMatchObject({ content: "private workspace content" });
+    expect(await engine.request("jobs.stopAll", {}, ui)).toMatchObject({
+      jobs: 0,
+    });
+    vi.useRealTimers();
+    expect(await call()).toMatchObject({
+      content: "private workspace content",
+    });
+  } finally {
+    vi.useRealTimers();
+    await engine.close();
     await f.cleanup();
   }
 });

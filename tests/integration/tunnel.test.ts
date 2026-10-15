@@ -138,6 +138,27 @@ describe("secure tunnel management", () => {
       ).toBe(false);
     },
   );
+  it.skipIf(process.platform === "win32")(
+    "stops an already-running tunnel when license/grant authorization is lost",
+    async () => {
+      await controller.save(settings());
+      await controller.start();
+      expect(controller.snapshot().live).toBe(true);
+      dependencies.checkGrant = async () => {
+        throw new Error(
+          "Activate your Remote Studio purchase in Settings → License.",
+        );
+      };
+      await expect
+        .poll(() => controller.snapshot(), { timeout: 10000 })
+        .toMatchObject({
+          phase: "error",
+          live: false,
+          ready: false,
+          error: "Activate your Remote Studio purchase in Settings → License.",
+        });
+    },
+  );
   it("detects direct/profile routing collisions while excluding its own process and explicit overrides", async () => {
     const tunnelId = settings().tunnelId;
     const other = "tunnel_ffffffffffffffffffffffffffffffff";

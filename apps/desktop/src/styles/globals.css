@@ -147,13 +147,18 @@ pre {
   font-weight: 650;
 }
 .brand-mark {
-  background: var(--text);
-  color: var(--surface);
+  background: transparent;
   width: 34px;
   height: 34px;
   border-radius: 9px;
   display: grid;
   place-items: center;
+}
+.brand-mark img,
+.about-logo img,
+.onboarding-mark img {
+  display: block;
+  object-fit: contain;
 }
 .brand span {
   display: block;

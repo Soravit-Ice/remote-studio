@@ -1,3 +1,4 @@
+import { stoppingTools } from "../../../packages/shared/src/stop-tools";
 import { studioVersion } from "../../../packages/shared/src/version";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/server";
 import { rpc } from "../../../packages/shared/src/rpc";
@@ -117,16 +118,17 @@ export async function createBridge(
       },
       async (args: any) => {
         try {
-          await rpc(
-            directory,
-            token,
-            "client.seen",
-            {
-              tool: tool.name,
-              clientName: server.server.getClientVersion()?.name,
-            },
-            "client",
-          );
+          if (!stoppingTools.has(tool.name))
+            await rpc(
+              directory,
+              token,
+              "client.seen",
+              {
+                tool: tool.name,
+                clientName: server.server.getClientVersion()?.name,
+              },
+              "client",
+            );
           const data: any = tool.output.parse(
             await rpc(
               directory,
